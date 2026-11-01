@@ -28,6 +28,9 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// Registrasi rute modul autentikasi
+app.use('/api/auth', require('./routes/authRoutes'));
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(` Server aktif berjalan di http://localhost:${PORT}`);
