@@ -5,7 +5,6 @@ import {
   Lock,
   Eye,
   EyeOff,
-  Gauge,
   Loader2,
   AlertCircle,
 } from "lucide-react";
@@ -40,11 +39,10 @@ export default function LoginPage() {
       const status = err.response?.status;
       setError(
         status === 401 || status === 400
-          ? "Username atau password salah"
+          ? "Email atau kata sandi tidak valid"
           : "Gagal terhubung ke server. Silakan coba lagi.",
       );
       setSubmitting(false);
-      emailRef.current?.focus();
     }
   };
 
@@ -52,12 +50,6 @@ export default function LoginPage() {
     <div className="w-full min-h-screen bg-[#F0F4F8] flex flex-col justify-center items-center p-4">
       {/* Kartu Utama */}
       <div className="w-full max-w-[420px] bg-white rounded-2xl shadow-[0_10px_35px_rgba(15,23,42,0.06)] border border-slate-100 p-8 sm:p-10 transition-all">
-        {/* Badge Ikon Atas */}
-        <div className="flex justify-center mb-4">
-          <div className="w-14 h-14 rounded-2xl bg-[#EEF2FF] border border-blue-100 flex items-center justify-center text-[#1E40AF] shadow-sm">
-            <Gauge className="w-7 h-7 stroke-[2.2]" />
-          </div>
-        </div>
 
         {/* Judul & Subjudul */}
         <div className="text-center mb-7">
@@ -65,7 +57,7 @@ export default function LoginPage() {
             Toko Ban &amp; Velg
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-1">
-            Sistem Informasi Persediaan &amp; Penjualan
+            Manajemen Persediaan &amp; Point of Sale
           </p>
         </div>
 
@@ -87,7 +79,7 @@ export default function LoginPage() {
               htmlFor="email"
               className="block text-left text-xs font-semibold text-slate-800 mb-1.5"
             >
-              Email Pengguna <span className="text-rose-500 font-bold">*</span>
+              Email <span className="text-rose-500 font-bold">*</span>
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
