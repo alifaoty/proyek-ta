@@ -34,6 +34,9 @@ app.use('/api/auth', require('./routes/authRoutes'));
 // Registrasi rute modul master produk
 app.use('/api/products', require('./routes/productRoutes'));
 
+// Registrasi rute modul mutasi persediaan
+app.use('/api/inventory', require('./routes/inventoryRoutes'));
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(` Server aktif berjalan di http://localhost:${PORT}`);

@@ -5,6 +5,8 @@ import DashboardLayout from './layouts/DashboardLayout';
 import LoginPage from './pages/auth/LoginPage';
 import UnauthorizedPage from './pages/errors/UnauthorizedPage';
 import ProductPage from './pages/master/ProductPage';
+import InboundPage from './pages/inventory/InboundPage';
+import OutboundPage from './pages/inventory/OutboundPage';
 
 // Placeholder sementara hingga modul terkait diimplementasikan
 function Placeholder({ title }) {
@@ -31,8 +33,8 @@ function App() {
               {/* Operasional (Admin & Owner) */}
               <Route path="/master-products" element={<ProductPage />} />
               <Route path="/pos" element={<Placeholder title="Kasir POS" />} />
-              <Route path="/inventory/inbound" element={<Placeholder title="Barang Masuk" />} />
-              <Route path="/inventory/outbound" element={<Placeholder title="Barang Keluar" />} />
+              <Route path="/inventory/inbound" element={<InboundPage />} />
+              <Route path="/inventory/outbound" element={<OutboundPage />} />
               <Route path="/inventory/stock-opname" element={<Placeholder title="Stock Opname" />} />
 
               {/* Eksklusif Owner */}
