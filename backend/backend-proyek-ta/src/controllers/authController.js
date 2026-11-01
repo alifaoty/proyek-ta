@@ -30,7 +30,7 @@ const login = async (req, res) => {
     const isValid = user ? await bcrypt.compare(password, user.password) : false;
 
     if (!isValid) {
-      return res.status(401).json({ success: false, message: 'Username atau password salah' });
+      return res.status(401).json({ success: false, message: 'Email atau kata sandi tidak valid' });
     }
 
     await logAudit({
