@@ -8,4 +8,3 @@ router.post('/login', login);
 router.get('/me', authMiddleware, getMe);
 
 module.exports = router;
-

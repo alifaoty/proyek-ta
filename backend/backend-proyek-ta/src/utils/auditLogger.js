@@ -23,4 +23,3 @@ const logAudit = async ({ userId = null, action, endpoint = null, description = 
 };
 
 module.exports = { logAudit };
-

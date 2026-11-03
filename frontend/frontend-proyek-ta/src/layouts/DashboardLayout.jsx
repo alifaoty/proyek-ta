@@ -10,21 +10,33 @@ export default function DashboardLayout() {
   const setOpen = (nextOpen) => setDrawer({ pathname, open: nextOpen });
 
   return (
-    <>
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col md:pl-64">
       <Sidebar open={open} onClose={() => setOpen(false)} />
-      {open && <div className="dl-backdrop" onClick={() => setOpen(false)} aria-hidden="true" />}
 
-      <div className="dl-main">
-        <header className="dl-topbar">
-          <button type="button" className="dl-burger" onClick={() => setOpen(true)} aria-label="Buka menu">
-            <Menu size={22} />
-          </button>
-          <b>Toko Ban &amp; Velg</b>
-        </header>
-        <main className="dl-content">
-          <Outlet />
-        </main>
-      </div>
-    </>
+      {open && (
+        <div
+          className="fixed inset-0 z-20 bg-slate-900/50 backdrop-blur-xs md:hidden"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Topbar Mobile */}
+      <header className="sticky top-0 z-10 flex items-center gap-3 h-13 px-4 bg-slate-900 text-white border-b border-slate-800 md:hidden">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Buka menu"
+          className="p-1.5 -ml-1 rounded-lg text-slate-200 hover:bg-slate-800 transition"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+        <b className="text-sm font-bold tracking-tight">Toko Ban &amp; Velg</b>
+      </header>
+
+      <main className="flex-1 w-full min-w-0">
+        <Outlet />
+      </main>
+    </div>
   );
 }

@@ -258,4 +258,3 @@ const getMutations = async (req, res) => {
 };
 
 module.exports = { createInbound, createOutbound, getMutations };
-

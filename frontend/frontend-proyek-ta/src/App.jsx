@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { Construction } from 'lucide-react';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './layouts/DashboardLayout';
@@ -11,9 +12,16 @@ import OutboundPage from './pages/inventory/OutboundPage';
 // Placeholder sementara hingga modul terkait diimplementasikan
 function Placeholder({ title }) {
   return (
-    <div style={{ padding: 32, fontFamily: 'Inter, system-ui, sans-serif', color: '#0f172a' }}>
-      <h1 style={{ margin: 0, fontSize: 22 }}>{title}</h1>
-      <p style={{ color: '#64748b' }}>Halaman ini akan diimplementasikan pada sprint berikutnya.</p>
+    <div className="p-6 font-sans">
+      <div className="bg-white border border-slate-200/80 rounded-xl shadow-sm p-8 max-w-xl">
+        <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center mb-3">
+          <Construction className="w-5 h-5" />
+        </div>
+        <h1 className="text-lg font-bold text-slate-900">{title}</h1>
+        <p className="text-xs text-slate-500 mt-1">
+          Halaman ini akan diimplementasikan pada sprint berikutnya.
+        </p>
+      </div>
     </div>
   );
 }
@@ -32,17 +40,17 @@ function App() {
             <Route element={<DashboardLayout />}>
               {/* Operasional (Admin & Owner) */}
               <Route path="/master-products" element={<ProductPage />} />
-              <Route path="/pos" element={<Placeholder title="Kasir POS" />} />
+              <Route path="/pos" element={<Placeholder title="Transaksi Penjualan" />} />
               <Route path="/inventory/inbound" element={<InboundPage />} />
               <Route path="/inventory/outbound" element={<OutboundPage />} />
-              <Route path="/inventory/stock-opname" element={<Placeholder title="Stock Opname" />} />
+              <Route path="/inventory/stock-opname" element={<Placeholder title="Stok Opname" />} />
 
               {/* Eksklusif Owner */}
               <Route element={<ProtectedRoute allowedRoles={['owner']} />}>
                 <Route path="/dashboard" element={<Placeholder title="Dashboard" />} />
-                <Route path="/approval-opname" element={<Placeholder title="Approval Opname" />} />
+                <Route path="/approval-opname" element={<Placeholder title="Persetujuan Stok Opname" />} />
                 <Route path="/expenses" element={<Placeholder title="Biaya Operasional" />} />
-                <Route path="/reports/financial" element={<Placeholder title="Laporan Finansial" />} />
+                <Route path="/reports/financial" element={<Placeholder title="Laporan Keuangan" />} />
               </Route>
             </Route>
           </Route>
