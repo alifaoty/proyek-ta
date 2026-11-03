@@ -100,8 +100,10 @@ const getProducts = async (req, res) => {
       params.push(condition);
     }
     if (ring_size) {
-      where.push('ring_size = ?');
-      params.push(String(ring_size).toUpperCase());
+      const cleanRingSize = String(ring_size).trim().toUpperCase();
+      const formattedRingSize = cleanRingSize.startsWith('R') ? cleanRingSize : `R${cleanRingSize}`;
+      where.push('UPPER(ring_size) = ?');
+      params.push(formattedRingSize);
     }
     if (stock_status) {
       if (stock_status === 'available') where.push('current_stock > 0');
@@ -268,4 +270,3 @@ const deleteProduct = async (req, res) => {
 };
 
 module.exports = { getProducts, getProductById, createProduct, updateProduct, deleteProduct };
-
