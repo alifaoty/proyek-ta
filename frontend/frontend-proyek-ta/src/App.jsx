@@ -8,6 +8,7 @@ import UnauthorizedPage from './pages/errors/UnauthorizedPage';
 import ProductPage from './pages/master/ProductPage';
 import InboundPage from './pages/inventory/InboundPage';
 import OutboundPage from './pages/inventory/OutboundPage';
+import POSPage from './pages/pos/POSPage';
 
 // Placeholder sementara hingga modul terkait diimplementasikan
 function Placeholder({ title }) {
@@ -40,7 +41,7 @@ function App() {
             <Route element={<DashboardLayout />}>
               {/* Operasional (Admin & Owner) */}
               <Route path="/master-products" element={<ProductPage />} />
-              <Route path="/pos" element={<Placeholder title="Transaksi Penjualan" />} />
+              <Route path="/pos" element={<POSPage />} />
               <Route path="/inventory/inbound" element={<InboundPage />} />
               <Route path="/inventory/outbound" element={<OutboundPage />} />
               <Route path="/inventory/stock-opname" element={<Placeholder title="Stok Opname" />} />
