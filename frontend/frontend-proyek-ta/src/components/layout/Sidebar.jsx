@@ -7,7 +7,7 @@ import useAuth from '../../hooks/useAuth';
 
 const OPERASIONAL = [
   { to: '/master-products', label: 'Master Produk', icon: Boxes },
-  { to: '/pos', label: 'Transaksi Penjualan', icon: ShoppingCart },
+  { to: '/pos', label: 'Penjualan (POS)', icon: ShoppingCart },
   { to: '/inventory/inbound', label: 'Penerimaan Barang', icon: ArrowDownToLine },
   { to: '/inventory/outbound', label: 'Mutasi Persediaan', icon: ArrowUpFromLine },
   { to: '/inventory/stock-opname', label: 'Stok Opname', icon: ClipboardList },
@@ -130,4 +130,4 @@ export default function Sidebar({ open = false, onClose }) {
       </div>
     </aside>
   );
-}
+}git

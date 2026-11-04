@@ -24,3 +24,22 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Pengaturan cetak struk termal POS */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #pos-receipt-printable,
+  #pos-receipt-printable * {
+    visibility: visible;
+  }
+  #pos-receipt-printable {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
