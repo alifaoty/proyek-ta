@@ -2,7 +2,7 @@ const db = require('../config/database');
 const { logAudit } = require('../utils/auditLogger');
 
 const OUTBOUND_REASONS = ['retur_rusak', 'pemakaian_internal', 'peminjaman', 'hilang'];
-const MUTATION_TYPES = ['masuk', 'penjualan', 'keluar_non_penjualan', 'adjustment_opname'];
+const MUTATION_TYPES = ['masuk', 'penjualan', 'keluar_non_penjualan', 'penyesuaian'];
 
 const fail = (res, status, message) => res.status(status).json({ success: false, message });
 
@@ -228,11 +228,15 @@ const getMutations = async (req, res) => {
     }
     if (mutation_type) {
       if (!MUTATION_TYPES.includes(mutation_type)) return fail(res, 400, 'mutation_type tidak valid');
-      where.push('sml.mutation_type = ?');
-      params.push(mutation_type);
+      if (mutation_type === 'penyesuaian') {
+        where.push("sml.mutation_type IN ('penyesuaian')");
+      } else {
+        where.push('sml.mutation_type = ?');
+        params.push(mutation_type);
+      }
     }
 
-    let limit = 50;
+    let limit = 100;
     if (req.query.limit !== undefined && req.query.limit !== '') {
       if (!isPositiveInt(req.query.limit)) return fail(res, 400, 'limit harus bilangan bulat positif');
       limit = Math.min(Number(req.query.limit), 500);
@@ -245,7 +249,7 @@ const getMutations = async (req, res) => {
               u.name AS actor_name, sml.created_at
        FROM stock_mutation_logs sml
        JOIN products p ON p.id = sml.product_id
-       JOIN users u ON u.id = sml.user_id
+       LEFT JOIN users u ON u.id = sml.user_id
        ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
        ORDER BY sml.id DESC LIMIT ${limit}`,
       params

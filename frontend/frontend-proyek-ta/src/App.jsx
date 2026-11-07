@@ -8,6 +8,8 @@ import UnauthorizedPage from './pages/errors/UnauthorizedPage';
 import ProductPage from './pages/master/ProductPage';
 import InboundPage from './pages/inventory/InboundPage';
 import OutboundPage from './pages/inventory/OutboundPage';
+import StockOpnamePage from './pages/inventory/StockOpnamePage';
+import StockApprovalPage from './pages/owner/StockApprovalPage';
 import POSPage from './pages/pos/POSPage';
 
 // Placeholder sementara hingga modul terkait diimplementasikan
@@ -44,12 +46,13 @@ function App() {
               <Route path="/pos" element={<POSPage />} />
               <Route path="/inventory/inbound" element={<InboundPage />} />
               <Route path="/inventory/outbound" element={<OutboundPage />} />
-              <Route path="/inventory/stock-opname" element={<Placeholder title="Stok Opname" />} />
+              <Route path="/inventory/stock-opname" element={<StockOpnamePage />} />
 
               {/* Eksklusif Owner */}
               <Route element={<ProtectedRoute allowedRoles={['owner']} />}>
                 <Route path="/dashboard" element={<Placeholder title="Dashboard" />} />
-                <Route path="/approval-opname" element={<Placeholder title="Persetujuan Stok Opname" />} />
+                <Route path="/owner/stock-approvals" element={<StockApprovalPage />} />
+                <Route path="/approval-opname" element={<Navigate to="/owner/stock-approvals" replace />} />
                 <Route path="/expenses" element={<Placeholder title="Biaya Operasional" />} />
                 <Route path="/reports/financial" element={<Placeholder title="Laporan Keuangan" />} />
               </Route>

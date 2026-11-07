@@ -15,7 +15,7 @@ const OPERASIONAL = [
 
 const OWNER_ONLY = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/approval-opname', label: 'Persetujuan Stok Opname', icon: ClipboardCheck },
+  { to: '/owner/stock-approvals', label: 'Persetujuan Stok Opname', icon: ClipboardCheck },
   { to: '/expenses', label: 'Biaya Operasional', icon: Wallet },
   { to: '/reports/financial', label: 'Laporan Keuangan', icon: Receipt },
 ];
