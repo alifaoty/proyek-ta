@@ -11,4 +11,3 @@ export const getTransactions = (params) =>
 
 export const getTransactionById = (id) =>
   axiosClient.get(`/transactions/${id}`);
-
