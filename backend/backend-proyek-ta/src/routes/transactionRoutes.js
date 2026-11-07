@@ -14,4 +14,3 @@ router.get('/', transactionController.getTransactions);
 router.get('/:id', transactionController.getTransactionById);
 
 module.exports = router;
-

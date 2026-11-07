@@ -130,4 +130,4 @@ export default function Sidebar({ open = false, onClose }) {
       </div>
     </aside>
   );
-}git
+}

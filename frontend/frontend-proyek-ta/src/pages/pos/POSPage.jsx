@@ -471,7 +471,8 @@ export default function POSPage() {
   }, []);
 
   useEffect(() => {
-    loadCatalog();
+    const timer = setTimeout(loadCatalog, 0);
+    return () => clearTimeout(timer);
   }, [loadCatalog]);
 
   useEffect(() => {
