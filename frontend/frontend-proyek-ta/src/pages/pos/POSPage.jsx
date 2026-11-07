@@ -13,7 +13,6 @@ import {
   RotateCcw,
   Search,
   ShoppingBag,
-  ShoppingCart,
   Trash2,
   UserCheck,
   X,
@@ -688,8 +687,7 @@ export default function POSPage() {
             <div className="flex flex-wrap items-center justify-between gap-2 text-left">
               <div>
                 <h1 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                  <ShoppingCart className="w-4 h-4 text-blue-600" />
-                  <span>Terminal Kasir (POS)</span>
+                  <span>Penjualan (POS)</span>
                 </h1>
                 <p className="text-[11px] text-slate-500">
                   Klik kartu produk untuk menambahkan ke keranjang belanja
