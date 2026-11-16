@@ -2,12 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { getProducts } from '../../api/productApi';
 import { createInbound } from '../../api/inventoryApi';
+import { rupiah, today } from '../../utils/formatters';
 
-const today = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
-const rupiah = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
 let rowSeq = 0;
 const newRow = () => ({ key: ++rowSeq, product_id: '', quantity: '', purchase_price: '' });
 

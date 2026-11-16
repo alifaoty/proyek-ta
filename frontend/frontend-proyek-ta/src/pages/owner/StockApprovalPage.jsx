@@ -15,43 +15,9 @@ import {
   getOpnames,
   rejectOpname,
 } from '../../api/stockOpnameApi';
+import { DifferenceBadge } from '../../components/common/StatusBadges';
 import useAuth from '../../hooks/useAuth';
-
-const formatDateTime = (val) => {
-  if (!val) return '—';
-  const d = new Date(val);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleString('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
-
-function DifferenceBadge({ difference }) {
-  const diff = Number(difference || 0);
-  if (diff < 0) {
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-rose-50 text-rose-700 border border-rose-200">
-        {diff} unit (Kurang)
-      </span>
-    );
-  }
-  if (diff > 0) {
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
-        +{diff} unit (Lebih)
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-      0 unit (Sesuai)
-    </span>
-  );
-}
+import { formatDateTime } from '../../utils/formatters';
 
 // Modal Konfirmasi Setujui / Tolak Pengajuan Opname
 function ReviewModal({ mode, item, onClose, onSuccess }) {
@@ -465,7 +431,7 @@ export default function StockApprovalPage() {
                       {row.physical_stock}
                     </td>
                     <td className="py-3 px-4 text-center whitespace-nowrap">
-                      <DifferenceBadge difference={row.difference} />
+                      <DifferenceBadge difference={row.difference} minusLabel="Kurang" />
                     </td>
                     <td className="py-3 px-4 max-w-xs text-slate-600">
                       {row.notes || <span className="text-slate-400">—</span>}
