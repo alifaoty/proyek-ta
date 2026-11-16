@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { getProducts } from '../../api/productApi';
 import { createInbound } from '../../api/inventoryApi';
 import { rupiah, today } from '../../utils/formatters';
+import { validateInboundForm } from '../../utils/inventoryValidator';
+import InboundSummaryBar from './InboundSummaryBar';
 
 let rowSeq = 0;
 const newRow = () => ({ key: ++rowSeq, product_id: '', quantity: '', purchase_price: '' });
@@ -51,25 +53,9 @@ export default function InboundPage() {
   const totalUnits = rows.reduce((s, r) => s + (Number(r.quantity) > 0 ? Number(r.quantity) : 0), 0);
   const totalAmount = rows.reduce((s, r) => s + lineSubtotal(r), 0);
 
-  const validate = () => {
-    const e = { rows: {} };
-    if (!header.supplier_name.trim()) e.supplier_name = 'Nama supplier wajib diisi';
-    if (!header.received_date) e.received_date = 'Tanggal penerimaan wajib diisi';
-    rows.forEach((r) => {
-      const re = {};
-      if (!r.product_id) re.product_id = 'Pilih produk';
-      if (!(Number.isInteger(Number(r.quantity)) && Number(r.quantity) > 0)) re.quantity = 'Harus bilangan bulat > 0';
-      if (r.purchase_price === '' || Number(r.purchase_price) < 0) re.purchase_price = 'Harga tidak valid';
-      if (Object.keys(re).length) e.rows[r.key] = re;
-    });
-    const ids = rows.map((r) => r.product_id).filter(Boolean);
-    if (new Set(ids).size !== ids.length) e.rowsGeneral = 'Produk yang sama dipilih lebih dari satu baris';
-    return e;
-  };
-
   const submit = async (ev) => {
     ev.preventDefault();
-    const e = validate();
+    const e = validateInboundForm(header, rows);
     setErrors(e);
     setApiError('');
     if (e.supplier_name || e.received_date || e.rowsGeneral || Object.keys(e.rows).length) return;
@@ -307,43 +293,12 @@ export default function InboundPage() {
         </div>
 
         {/* Sticky Summary Bar */}
-        <div className="sticky bottom-3 z-10 bg-white border border-slate-200/90 rounded-xl shadow-md px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-6 text-left">
-            <div>
-              <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                Jenis Barang
-              </span>
-              <b className="font-mono tabular-nums text-base font-bold text-slate-900">
-                {totalTypes}
-              </b>
-            </div>
-            <div>
-              <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                Total Unit
-              </span>
-              <b className="font-mono tabular-nums text-base font-bold text-slate-900">
-                {totalUnits}
-              </b>
-            </div>
-            <div>
-              <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                Total Nota
-              </span>
-              <b className="font-mono tabular-nums text-base font-bold text-blue-600">
-                {rupiah(totalAmount)}
-              </b>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={saving}
-            className="h-10 px-5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-60 text-white text-xs font-semibold shadow-xs transition inline-flex items-center justify-center gap-2 cursor-pointer"
-          >
-            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-            <span>{saving ? 'Memproses...' : 'Bukukan Penerimaan Barang'}</span>
-          </button>
-        </div>
+        <InboundSummaryBar
+          totalTypes={totalTypes}
+          totalUnits={totalUnits}
+          totalAmount={totalAmount}
+          saving={saving}
+        />
       </form>
 
       {toast && (
