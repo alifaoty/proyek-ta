@@ -376,7 +376,10 @@ export default function StockOpnamePage() {
         opnames={opnames}
         loadingHistory={loadingHistory}
         statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
+        onStatusFilterChange={(val) => {
+          if (val !== statusFilter) setLoadingHistory(true);
+          setStatusFilter(val);
+        }}
       />
 
       {toast && (
