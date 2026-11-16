@@ -22,29 +22,9 @@ import {
   createCashTransaction,
   createQrisTransaction,
 } from "../../api/transactionApi";
+import { CASH_SHORTCUTS, POS_TABS as TABS } from "../../constants/productConstants";
 import useAuth from "../../hooks/useAuth";
-
-const TABS = [
-  { key: "all", label: "Semua" },
-  { key: "ban-baru", label: "Ban Baru", category: "ban", condition: "baru" },
-  { key: "ban-bekas", label: "Ban Bekas", category: "ban", condition: "bekas" },
-  { key: "velg-baru", label: "Velg Baru", category: "velg", condition: "baru" },
-  {
-    key: "velg-bekas",
-    label: "Velg Bekas",
-    category: "velg",
-    condition: "bekas",
-  },
-];
-
-const CASH_SHORTCUTS = [
-  { label: "100rb", value: 100000 },
-  { label: "200rb", value: 200000 },
-  { label: "500rb", value: 500000 },
-  { label: "1 Juta", value: 1000000 },
-];
-
-const rupiah = (n) => "Rp " + Number(n || 0).toLocaleString("id-ID");
+import { rupiah } from "../../utils/formatters";
 
 const makeDraftCode = () => `DRAFT-${Date.now().toString().slice(-6)}`;
 

@@ -5,21 +5,14 @@ import {
 import {
   createProduct, deleteProduct, getProducts, updateProduct,
 } from '../../api/productApi';
+import { RING_SIZES, PRODUCT_TABS as TABS } from '../../constants/productConstants';
+import { rupiah } from '../../utils/formatters';
 
-const RING_SIZES = ['R13', 'R14', 'R15', 'R16', 'R17', 'R18', 'R19', 'R20'];
-const TABS = [
-  { key: 'all', label: 'Semua Produk' },
-  { key: 'ban-baru', label: 'Ban Baru', category: 'ban', condition: 'baru' },
-  { key: 'ban-bekas', label: 'Ban Bekas', category: 'ban', condition: 'bekas' },
-  { key: 'velg-baru', label: 'Velg Baru', category: 'velg', condition: 'baru' },
-  { key: 'velg-bekas', label: 'Velg Bekas', category: 'velg', condition: 'bekas' },
-];
 const EMPTY_FORM = {
   code: '', name: '', category: 'ban', item_condition: 'baru', ring_size: 'R15',
   specification: '', purchase_price: '', selling_price: '', current_stock: '',
 };
 
-const rupiah = (n) => 'Rp ' + Number(n).toLocaleString('id-ID');
 const errMsg = (err, fallback) => err.response?.data?.message || fallback;
 
 function validate(f) {

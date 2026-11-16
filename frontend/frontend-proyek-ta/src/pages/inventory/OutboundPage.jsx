@@ -8,21 +8,15 @@ import {
 } from 'lucide-react';
 import { getProducts } from '../../api/productApi';
 import { createOutbound, getMutations } from '../../api/inventoryApi';
-
-const REASONS = [
-  { value: 'retur_rusak', label: 'Retur Rusak / Cacat Pabrik' },
-  { value: 'pemakaian_internal', label: 'Pemakaian Internal Bengkel' },
-  { value: 'peminjaman', label: 'Peminjaman Rekanan' },
-  { value: 'hilang', label: 'Barang Hilang' },
-];
-
-const MUTATION_FILTER_TABS = [
-  { key: '', label: 'Semua Mutasi' },
-  { key: 'masuk', label: 'Masuk' },
-  { key: 'penjualan', label: 'Penjualan' },
-  { key: 'keluar_non_penjualan', label: 'Keluar Non-Penjualan' },
-  { key: 'penyesuaian', label: 'Penyesuaian / Opname' },
-];
+import {
+  MutationTypeBadge,
+  StockChangeValue,
+} from '../../components/common/StatusBadges';
+import {
+  MUTATION_FILTER_TABS,
+  OUTBOUND_REASONS as REASONS,
+} from '../../constants/productConstants';
+import { formatDateTime } from '../../utils/formatters';
 
 const EMPTY = { product_id: '', quantity: '', reason: '', notes: '' };
 
@@ -32,78 +26,6 @@ const inputCls = (hasErr) =>
       ? 'border-rose-500 focus:border-rose-600 focus:ring-2 focus:ring-rose-100'
       : 'border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100'
   }`;
-
-const formatDateTime = (val) => {
-  if (!val) return '—';
-  const d = new Date(val);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleString('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
-
-function MutationTypeBadge({ type }) {
-  if (type === 'masuk') {
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-        Masuk
-      </span>
-    );
-  }
-  if (type === 'penjualan') {
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-        Penjualan
-      </span>
-    );
-  }
-  if (type === 'keluar_non_penjualan') {
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-        Keluar Non-Penjualan
-      </span>
-    );
-  }
-  if (type === 'penyesuaian') {
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
-        Penyesuaian / Opname
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-      {type || '—'}
-    </span>
-  );
-}
-
-function StockChangeValue({ value }) {
-  const num = Number(value || 0);
-  if (num > 0) {
-    return (
-      <span className="font-mono tabular-nums font-bold text-emerald-600">
-        +{num}
-      </span>
-    );
-  }
-  if (num < 0) {
-    return (
-      <span className="font-mono tabular-nums font-bold text-rose-600">
-        {num}
-      </span>
-    );
-  }
-  return (
-    <span className="font-mono tabular-nums font-semibold text-slate-500">
-      0
-    </span>
-  );
-}
 
 export default function OutboundPage() {
   const [products, setProducts] = useState([]);

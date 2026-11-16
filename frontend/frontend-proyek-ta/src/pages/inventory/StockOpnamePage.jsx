@@ -1,85 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
-  CheckCircle2,
-  Clock,
   Loader2,
   PackageCheck,
   RefreshCw,
   Search,
   Send,
-  XCircle,
 } from 'lucide-react';
 import { getProducts } from '../../api/productApi';
 import { createOpname, getOpnames } from '../../api/stockOpnameApi';
-
-const STATUS_TABS = [
-  { key: '', label: 'Semua Status' },
-  { key: 'pending', label: 'Pending' },
-  { key: 'approved', label: 'Approved' },
-  { key: 'rejected', label: 'Rejected' },
-];
-
-const formatDateTime = (val) => {
-  if (!val) return '—';
-  const d = new Date(val);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleString('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
-
-function DifferenceBadge({ difference }) {
-  const diff = Number(difference || 0);
-  if (diff < 0) {
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-rose-50 text-rose-700 border border-rose-200">
-        {diff} unit (Kurang/Hilang)
-      </span>
-    );
-  }
-  if (diff > 0) {
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">
-        +{diff} unit (Lebih)
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-      0 unit (Sesuai)
-    </span>
-  );
-}
-
-function StatusBadge({ status }) {
-  if (status === 'approved') {
-    return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-        <CheckCircle2 className="w-3 h-3" />
-        <span>Approved</span>
-      </span>
-    );
-  }
-  if (status === 'rejected') {
-    return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-        <XCircle className="w-3 h-3" />
-        <span>Rejected</span>
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-      <Clock className="w-3 h-3" />
-      <span>Pending</span>
-    </span>
-  );
-}
+import {
+  DifferenceBadge,
+  OpnameStatusBadge as StatusBadge,
+} from '../../components/common/StatusBadges';
+import { OPNAME_STATUS_TABS as STATUS_TABS } from '../../constants/productConstants';
+import { formatDateTime } from '../../utils/formatters';
 
 export default function StockOpnamePage() {
   const [products, setProducts] = useState([]);
