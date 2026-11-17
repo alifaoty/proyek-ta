@@ -1,22 +1,10 @@
 const db = require('../config/database');
 const { logAudit } = require('../utils/auditLogger');
+const { HttpError, fail } = require('../utils/httpHelper');
+const { isNonNegNumber, isPositiveInt } = require('../utils/validators');
 
 const OUTBOUND_REASONS = ['retur_rusak', 'pemakaian_internal', 'peminjaman', 'hilang'];
 const MUTATION_TYPES = ['masuk', 'penjualan', 'keluar_non_penjualan', 'penyesuaian'];
-
-const fail = (res, status, message) => res.status(status).json({ success: false, message });
-
-// Kesalahan yang sengaja dilempar untuk membatalkan transaksi dengan status HTTP tertentu
-class HttpError extends Error {
-  constructor(status, message) {
-    super(message);
-    this.status = status;
-  }
-}
-
-const isPositiveInt = (v) => Number.isInteger(Number(v)) && Number(v) > 0 && String(v).trim() !== '';
-const isNonNegNumber = (v) =>
-  v !== '' && v !== null && v !== undefined && Number.isFinite(Number(v)) && Number(v) >= 0;
 
 // Format tanggal YYMMDD berdasarkan waktu server
 const datePart = () => {
