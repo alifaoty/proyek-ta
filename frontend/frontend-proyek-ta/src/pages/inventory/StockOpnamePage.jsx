@@ -286,7 +286,7 @@ export default function StockOpnamePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
               {/* Input Angka Stok Fisik */}
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5 truncate">
                   Stok Fisik Aktual di Rak{' '}
                   <span className="text-rose-600">*</span>
                 </label>
@@ -316,18 +316,20 @@ export default function StockOpnamePage() {
                 )}
               </div>
 
-              {/* Indikator Selisih Real-Time */}
+              {/* Selisih Stok */}
               <div>
-                <span className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-                  Indikator Selisih Real-Time
+                <span className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5 truncate">
+                  Selisih Stok
                 </span>
-                <div className="h-10 px-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center">
+                <div className="h-10 px-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center whitespace-nowrap overflow-hidden">
                   {realtimeDifference === null ? (
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-slate-400 whitespace-nowrap truncate">
                       Pilih produk &amp; isi stok fisik
                     </span>
                   ) : (
-                    <DifferenceBadge difference={realtimeDifference} />
+                    <span className="whitespace-nowrap inline-flex">
+                      <DifferenceBadge difference={realtimeDifference} />
+                    </span>
                   )}
                 </div>
               </div>

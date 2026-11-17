@@ -2,7 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { getProducts } from '../../api/productApi';
 import { createInbound } from '../../api/inventoryApi';
-import { rupiah, today } from '../../utils/formatters';
+import {
+  formatThousandDigits,
+  parseDigits,
+  rupiah,
+  today,
+} from '../../utils/formatters';
 import { validateInboundForm } from '../../utils/inventoryValidator';
 import InboundSummaryBar from './InboundSummaryBar';
 
@@ -45,7 +50,10 @@ export default function InboundPage() {
 
   const pickProduct = (key, id) => {
     const p = productMap.get(id);
-    updateRow(key, { product_id: id, purchase_price: p ? String(p.purchase_price) : '' });
+    updateRow(key, {
+      product_id: id,
+      purchase_price: p ? String(Math.round(Number(p.purchase_price || 0))) : '',
+    });
   };
 
   const lineSubtotal = (r) => (Number(r.quantity) || 0) * (Number(r.purchase_price) || 0);
@@ -255,14 +263,23 @@ export default function InboundPage() {
                         )}
                       </td>
                       <td className="py-2.5 px-3.5">
-                        <input
-                          className={`${inputCls(re(r.key).purchase_price)} text-right font-mono tabular-nums`}
-                          type="number"
-                          min="0"
-                          step="any"
-                          value={r.purchase_price}
-                          onChange={(e) => updateRow(r.key, { purchase_price: e.target.value })}
-                        />
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 pointer-events-none">
+                            Rp
+                          </span>
+                          <input
+                            className={`${inputCls(re(r.key).purchase_price)} pl-8 text-right font-mono tabular-nums`}
+                            type="text"
+                            inputMode="numeric"
+                            value={formatThousandDigits(r.purchase_price)}
+                            onChange={(e) =>
+                              updateRow(r.key, {
+                                purchase_price: parseDigits(e.target.value),
+                              })
+                            }
+                            placeholder="0"
+                          />
+                        </div>
                         {re(r.key).purchase_price && (
                           <div className="text-xs text-rose-600 font-medium mt-1 text-right">
                             {re(r.key).purchase_price}

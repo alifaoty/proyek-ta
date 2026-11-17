@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Loader2, X } from 'lucide-react';
+import { Loader2, Lock, X } from 'lucide-react';
 import { createProduct, updateProduct } from '../../api/productApi';
 import { RING_SIZES } from '../../constants/productConstants';
+import { formatThousandDigits, parseDigits } from '../../utils/formatters';
 import { EMPTY_PRODUCT_FORM, validateProductForm } from '../../utils/productValidator';
 
 const errMsg = (err, fallback) => err.response?.data?.message || fallback;
@@ -36,9 +37,9 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
           item_condition: product.item_condition,
           ring_size: product.ring_size,
           specification: product.specification || '',
-          purchase_price: String(product.purchase_price),
-          selling_price: String(product.selling_price),
-          current_stock: String(product.current_stock),
+          purchase_price: String(Math.round(Number(product.purchase_price || 0))),
+          selling_price: String(Math.round(Number(product.selling_price || 0))),
+          current_stock: String(product.current_stock ?? 0),
         }
       : EMPTY_PRODUCT_FORM
   );
@@ -47,6 +48,8 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
 
   const set = (key) => (e) => setForm((p) => ({ ...p, [key]: e.target.value }));
+  const setCurrency = (key) => (e) =>
+    setForm((p) => ({ ...p, [key]: parseDigits(e.target.value) }));
 
   const submit = async (e) => {
     e.preventDefault();
@@ -165,37 +168,65 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
               />
             </Field>
             <Field label="Harga Perolehan (Rp)" error={errors.purchase_price}>
-              <input
-                className={`${baseInputCls(errors.purchase_price)} font-mono tabular-nums`}
-                type="number"
-                min="0"
-                step="any"
-                value={form.purchase_price}
-                onChange={set('purchase_price')}
-                placeholder="Contoh: 650000"
-              />
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 pointer-events-none">
+                  Rp
+                </span>
+                <input
+                  className={`${baseInputCls(errors.purchase_price)} pl-9 font-mono tabular-nums`}
+                  type="text"
+                  inputMode="numeric"
+                  value={formatThousandDigits(form.purchase_price)}
+                  onChange={setCurrency('purchase_price')}
+                  placeholder="650.000"
+                />
+              </div>
             </Field>
             <Field label="Harga Jual (Rp)" error={errors.selling_price}>
-              <input
-                className={`${baseInputCls(errors.selling_price)} font-mono tabular-nums`}
-                type="number"
-                min="0"
-                step="any"
-                value={form.selling_price}
-                onChange={set('selling_price')}
-                placeholder="Contoh: 850000"
-              />
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 pointer-events-none">
+                  Rp
+                </span>
+                <input
+                  className={`${baseInputCls(errors.selling_price)} pl-9 font-mono tabular-nums`}
+                  type="text"
+                  inputMode="numeric"
+                  value={formatThousandDigits(form.selling_price)}
+                  onChange={setCurrency('selling_price')}
+                  placeholder="850.000"
+                />
+              </div>
             </Field>
-            <Field label={isEdit ? 'Stok Fisik' : 'Stok Awal'} error={errors.current_stock}>
-              <input
-                className={`${baseInputCls(errors.current_stock)} font-mono tabular-nums`}
-                type="number"
-                min="0"
-                step="1"
-                value={form.current_stock}
-                onChange={set('current_stock')}
-                placeholder="Masukkan jumlah stok"
-              />
+            <Field
+              label={isEdit ? 'Stok Fisik (Terkunci)' : 'Stok Awal'}
+              error={errors.current_stock}
+              full={isEdit}
+            >
+              <div className="relative">
+                <input
+                  className={`${baseInputCls(errors.current_stock)} font-mono tabular-nums ${
+                    isEdit
+                      ? 'bg-slate-100 text-slate-500 cursor-not-allowed pr-9'
+                      : ''
+                  }`}
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={form.current_stock}
+                  onChange={isEdit ? undefined : set('current_stock')}
+                  disabled={isEdit}
+                  readOnly={isEdit}
+                  placeholder="Masukkan jumlah stok"
+                />
+                {isEdit && (
+                  <Lock className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                )}
+              </div>
+              {isEdit && (
+                <div className="text-[11px] text-slate-500 mt-1">
+                  Perubahan stok hanya dapat dilakukan melalui menu Penerimaan Barang, Barang Keluar, atau Stok Opname.
+                </div>
+              )}
             </Field>
           </div>
         </div>

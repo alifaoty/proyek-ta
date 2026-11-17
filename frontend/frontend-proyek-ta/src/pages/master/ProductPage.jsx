@@ -168,18 +168,15 @@ export default function ProductPage() {
       {/* Data Grid Card */}
       <div className="bg-white border border-slate-200/80 rounded-xl shadow-sm overflow-hidden">
         <div className="w-full overflow-x-auto">
-          <table className="w-full min-w-[900px] border-collapse text-left">
+          <table className="w-full border-collapse text-left">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
                 <th className="py-2.5 px-3.5">Kode SKU</th>
                 <th className="py-2.5 px-3.5">Nama Barang &amp; Spesifikasi</th>
-                <th className="py-2.5 px-3.5">Kategori</th>
-                <th className="py-2.5 px-3.5">Kondisi</th>
-                <th className="py-2.5 px-3.5">Ring</th>
+                <th className="py-2.5 px-3.5">Tipe &amp; Ring</th>
                 <th className="py-2.5 px-3.5 text-right">Harga Beli</th>
                 <th className="py-2.5 px-3.5 text-right">Harga Jual</th>
-                <th className="py-2.5 px-3.5 text-right">Stok Fisik</th>
-                <th className="py-2.5 px-3.5 text-center">Status</th>
+                <th className="py-2.5 px-3.5 text-center">Stok &amp; Status</th>
                 <th className="py-2.5 px-3.5 text-center">Aksi</th>
               </tr>
             </thead>
@@ -187,7 +184,7 @@ export default function ProductPage() {
               {loading &&
                 Array.from({ length: 6 }).map((_, i) => (
                   <tr key={i}>
-                    {Array.from({ length: 10 }).map((__, j) => (
+                    {Array.from({ length: 7 }).map((__, j) => (
                       <td key={j} className="py-3 px-3.5">
                         <div className="h-3.5 rounded bg-slate-200/70 animate-pulse" />
                       </td>
@@ -209,24 +206,24 @@ export default function ProductPage() {
                         </div>
                       )}
                     </td>
-                    <td className="py-2.5 px-3.5">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                        {p.category === 'ban' ? 'Ban' : 'Velg'}
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3.5">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border ${
-                          p.item_condition === 'baru'
-                            ? 'bg-blue-50 text-blue-700 border-blue-200'
-                            : 'bg-amber-50 text-amber-700 border-amber-200'
-                        }`}
-                      >
-                        {p.item_condition === 'baru' ? 'Baru' : 'Bekas'}
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3.5 font-mono font-semibold text-slate-700">
-                      {p.ring_size}
+                    <td className="py-2.5 px-3.5 whitespace-nowrap">
+                      <div className="inline-flex items-center gap-1.5">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                          {p.category === 'ban' ? 'Ban' : 'Velg'}
+                        </span>
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border ${
+                            p.item_condition === 'baru'
+                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : 'bg-amber-50 text-amber-700 border-amber-200'
+                          }`}
+                        >
+                          {p.item_condition === 'baru' ? 'Baru' : 'Bekas'}
+                        </span>
+                        <span className="font-mono font-bold text-slate-700 text-[11px] px-1.5 py-0.5 rounded bg-slate-100">
+                          {p.ring_size}
+                        </span>
+                      </div>
                     </td>
                     <td className="py-2.5 px-3.5 text-right font-mono tabular-nums font-medium text-slate-600 whitespace-nowrap">
                       {rupiah(p.purchase_price)}
@@ -234,19 +231,21 @@ export default function ProductPage() {
                     <td className="py-2.5 px-3.5 text-right font-mono tabular-nums font-semibold text-slate-900 whitespace-nowrap">
                       {rupiah(p.selling_price)}
                     </td>
-                    <td className="py-2.5 px-3.5 text-right font-mono tabular-nums font-bold text-slate-900">
-                      {p.current_stock}
-                    </td>
                     <td className="py-2.5 px-3.5 text-center whitespace-nowrap">
-                      {p.current_stock > 0 ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          Tersedia
+                      <div className="inline-flex items-center justify-center gap-2">
+                        <span className="font-mono tabular-nums font-bold text-slate-900">
+                          {p.current_stock} unit
                         </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-                          Habis
-                        </span>
-                      )}
+                        {p.current_stock > 0 ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Tersedia
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                            Habis
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="py-2.5 px-3.5 text-center whitespace-nowrap">
                       <div className="inline-flex items-center justify-center gap-1">

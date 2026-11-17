@@ -2,7 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, Banknote, Loader2, Printer, X } from "lucide-react";
 import { createCashTransaction } from "../../api/transactionApi";
 import { CASH_SHORTCUTS } from "../../constants/productConstants";
-import { rupiah } from "../../utils/formatters";
+import {
+  formatThousandDigits,
+  parseDigits,
+  rupiah,
+} from "../../utils/formatters";
 
 // Modal Pembayaran Tunai
 export default function CashPaymentModal({
@@ -142,23 +146,29 @@ export default function CashPaymentModal({
               Nominal Uang Diterima (Rp){" "}
               <span className="text-rose-600">*</span>
             </label>
-            <input
-              ref={inputRef}
-              type="number"
-              min={grandTotal}
-              step="1000"
-              value={paidAmount}
-              onChange={(e) => setPaidAmount(e.target.value)}
-              disabled={submitting}
-              className="w-full h-11 px-3.5 bg-white border border-slate-300 rounded-lg font-mono tabular-nums text-base font-bold text-slate-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition"
-              placeholder="Masukkan nominal uang tunai"
-            />
+            <div className="relative">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400 pointer-events-none">
+                Rp
+              </span>
+              <input
+                ref={inputRef}
+                type="text"
+                inputMode="numeric"
+                value={formatThousandDigits(paidAmount)}
+                onChange={(e) => setPaidAmount(parseDigits(e.target.value))}
+                disabled={submitting}
+                className="w-full h-11 pl-10 pr-3.5 bg-white border border-slate-300 rounded-lg font-mono tabular-nums text-base font-bold text-slate-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                placeholder="0"
+              />
+            </div>
 
             {/* Tombol Shortcut Pecahan Uang */}
             <div className="grid grid-cols-5 gap-1.5 mt-2">
               <button
                 type="button"
-                onClick={() => setPaidAmount(String(grandTotal))}
+                onClick={() =>
+                  setPaidAmount(String(Math.round(Number(grandTotal || 0))))
+                }
                 className="h-8 px-2 rounded-md border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[11px] font-bold transition cursor-pointer"
               >
                 Uang Pas
