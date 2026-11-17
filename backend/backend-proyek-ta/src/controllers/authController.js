@@ -1,9 +1,9 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/database');
+const { JWT_EXPIRES_IN, JWT_SECRET } = require('../config/jwtConfig');
 const { logAudit } = require('../utils/auditLogger');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecret_toko_ban_velg_key_2026';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // POST /api/auth/login
@@ -44,7 +44,7 @@ const login = async (req, res) => {
     const token = jwt.sign(
       { id: user.id, name: user.name, role: user.role },
       JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: JWT_EXPIRES_IN }
     );
 
     return res.status(200).json({
