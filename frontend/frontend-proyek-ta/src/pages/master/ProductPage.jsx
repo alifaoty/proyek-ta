@@ -3,6 +3,7 @@ import {
   AlertTriangle, PackageOpen, Pencil, Plus, RefreshCw, Search, Trash2,
 } from 'lucide-react';
 import { getProducts } from '../../api/productApi';
+import SegmentedTabs from '../../components/common/SegmentedTabs';
 import { RING_SIZES, PRODUCT_TABS as TABS } from '../../constants/productConstants';
 import { rupiah } from '../../utils/formatters';
 import ProductDeleteModal from './ProductDeleteModal';
@@ -129,21 +130,8 @@ export default function ProductPage() {
         </div>
 
         {/* Segmented Category Tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pt-1 border-t border-slate-100">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => setTab(t.key)}
-              className={`h-8 px-3 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
-                tab === t.key
-                  ? 'bg-slate-900 text-white shadow-2xs'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
+        <div className="pt-1 border-t border-slate-100 flex items-center justify-start">
+          <SegmentedTabs tabs={TABS} value={tab} onChange={setTab} />
         </div>
       </div>
 
@@ -201,14 +189,20 @@ export default function ProductPage() {
                     <td className="py-2.5 px-3.5">
                       <div className="font-semibold text-slate-900">{p.name}</div>
                       {p.specification && (
-                        <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                        <div className="text-xs font-medium text-slate-700 tabular-nums mt-0.5">
                           {p.specification}
                         </div>
                       )}
                     </td>
                     <td className="py-2.5 px-3.5 whitespace-nowrap">
                       <div className="inline-flex items-center gap-1.5">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold border ${
+                            p.category === 'ban'
+                              ? 'bg-slate-800 text-white border-slate-900'
+                              : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                          }`}
+                        >
                           {p.category === 'ban' ? 'Ban' : 'Velg'}
                         </span>
                         <span
@@ -220,20 +214,20 @@ export default function ProductPage() {
                         >
                           {p.item_condition === 'baru' ? 'Baru' : 'Bekas'}
                         </span>
-                        <span className="font-mono font-bold text-slate-700 text-[11px] px-1.5 py-0.5 rounded bg-slate-100">
+                        <span className="font-sans tabular-nums font-bold text-slate-700 text-[11px] px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200">
                           {p.ring_size}
                         </span>
                       </div>
                     </td>
-                    <td className="py-2.5 px-3.5 text-right font-mono tabular-nums font-medium text-slate-600 whitespace-nowrap">
+                    <td className="py-2.5 px-3.5 text-right font-sans tabular-nums font-medium text-slate-600 whitespace-nowrap">
                       {rupiah(p.purchase_price)}
                     </td>
-                    <td className="py-2.5 px-3.5 text-right font-mono tabular-nums font-semibold text-slate-900 whitespace-nowrap">
+                    <td className="py-2.5 px-3.5 text-right font-sans tabular-nums font-semibold text-slate-900 whitespace-nowrap">
                       {rupiah(p.selling_price)}
                     </td>
                     <td className="py-2.5 px-3.5 text-center whitespace-nowrap">
                       <div className="inline-flex items-center justify-center gap-2">
-                        <span className="font-mono tabular-nums font-bold text-slate-900">
+                        <span className="font-sans tabular-nums font-bold text-slate-900">
                           {p.current_stock} unit
                         </span>
                         {p.current_stock > 0 ? (
@@ -284,7 +278,7 @@ export default function ProductPage() {
 
         {!loading && products.length > 0 && (
           <div className="px-4 py-2.5 bg-slate-50/70 border-t border-slate-200/80 text-[11px] text-slate-500 text-left font-medium">
-            Menampilkan <span className="font-mono font-semibold text-slate-700">{products.length}</span> produk
+            Menampilkan <span className="font-sans tabular-nums font-semibold text-slate-700">{products.length}</span> produk
           </div>
         )}
       </div>

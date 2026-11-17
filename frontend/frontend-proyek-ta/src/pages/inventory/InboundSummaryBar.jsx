@@ -14,7 +14,7 @@ export default function InboundSummaryBar({
           <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
             Jenis Barang
           </span>
-          <b className="font-mono tabular-nums text-base font-bold text-slate-900">
+          <b className="font-sans tabular-nums text-base font-bold text-slate-900">
             {totalTypes}
           </b>
         </div>
@@ -22,7 +22,7 @@ export default function InboundSummaryBar({
           <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
             Total Unit
           </span>
-          <b className="font-mono tabular-nums text-base font-bold text-slate-900">
+          <b className="font-sans tabular-nums text-base font-bold text-slate-900">
             {totalUnits}
           </b>
         </div>
@@ -30,7 +30,7 @@ export default function InboundSummaryBar({
           <span className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
             Total Nota
           </span>
-          <b className="font-mono tabular-nums text-base font-bold text-blue-600">
+          <b className="font-sans tabular-nums text-base font-bold text-blue-600">
             {rupiah(totalAmount)}
           </b>
         </div>

@@ -147,7 +147,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
             </Field>
             <Field label="Ukuran Ring" error={errors.ring_size}>
               <select
-                className={`${baseInputCls(errors.ring_size)} font-mono`}
+                className={`${baseInputCls(errors.ring_size)} font-sans tabular-nums`}
                 value={form.ring_size}
                 onChange={set('ring_size')}
               >
@@ -173,7 +173,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
                   Rp
                 </span>
                 <input
-                  className={`${baseInputCls(errors.purchase_price)} pl-9 font-mono tabular-nums`}
+                  className={`${baseInputCls(errors.purchase_price)} pl-9 font-sans tabular-nums`}
                   type="text"
                   inputMode="numeric"
                   value={formatThousandDigits(form.purchase_price)}
@@ -188,7 +188,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
                   Rp
                 </span>
                 <input
-                  className={`${baseInputCls(errors.selling_price)} pl-9 font-mono tabular-nums`}
+                  className={`${baseInputCls(errors.selling_price)} pl-9 font-sans tabular-nums`}
                   type="text"
                   inputMode="numeric"
                   value={formatThousandDigits(form.selling_price)}
@@ -204,7 +204,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
             >
               <div className="relative">
                 <input
-                  className={`${baseInputCls(errors.current_stock)} font-mono tabular-nums ${
+                  className={`${baseInputCls(errors.current_stock)} font-sans tabular-nums ${
                     isEdit
                       ? 'bg-slate-100 text-slate-500 cursor-not-allowed pr-9'
                       : ''

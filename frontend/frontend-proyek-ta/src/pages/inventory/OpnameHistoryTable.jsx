@@ -1,4 +1,5 @@
 import { Loader2 } from 'lucide-react';
+import SegmentedTabs from '../../components/common/SegmentedTabs';
 import {
   DifferenceBadge,
   OpnameStatusBadge as StatusBadge,
@@ -17,7 +18,7 @@ export default function OpnameHistoryTable({
       <div className="px-5 py-3.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-bold text-slate-900">
-            Riwayat Pengajuan Stock Opname
+            Riwayat Pengajuan Stok Opname
           </h2>
           <p className="text-[11px] text-slate-500">
             Daftar seluruh perhitungan fisik beserta status review dari Owner
@@ -25,22 +26,11 @@ export default function OpnameHistoryTable({
         </div>
 
         {/* Filter Tab Status */}
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
-          {STATUS_TABS.map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => onStatusFilterChange(t.key)}
-              className={`h-7 px-2.5 rounded-md text-xs font-semibold transition cursor-pointer ${
-                statusFilter === t.key
-                  ? 'bg-white text-slate-900 shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+        <SegmentedTabs
+          tabs={STATUS_TABS}
+          value={statusFilter}
+          onChange={onStatusFilterChange}
+        />
       </div>
 
       <div className="overflow-x-auto">
@@ -61,13 +51,13 @@ export default function OpnameHistoryTable({
               <tr>
                 <td colSpan={7} className="py-10 text-center text-slate-400">
                   <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1.5 text-blue-600" />
-                  <span>Memuat riwayat stock opname...</span>
+                  <span>Memuat riwayat stok opname...</span>
                 </td>
               </tr>
             ) : opnames.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-10 text-center text-slate-400">
-                  Belum ada data pengajuan stock opname.
+                  Belum ada data pengajuan stok opname.
                 </td>
               </tr>
             ) : (
@@ -77,8 +67,8 @@ export default function OpnameHistoryTable({
                     <div className="font-mono font-bold text-slate-900">
                       {row.opname_code}
                     </div>
-                    <div className="text-[11px] text-slate-500 mt-0.5">
-                      <span className="font-mono">{formatDateTime(row.created_at)}</span>
+                    <div className="text-[11px] text-slate-500 mt-0.5 tabular-nums">
+                      <span>{formatDateTime(row.created_at)}</span>
                       {' • '}
                       <span>Oleh: {row.checked_by_name || '—'}</span>
                     </div>
@@ -87,14 +77,14 @@ export default function OpnameHistoryTable({
                     <div className="font-semibold text-slate-900">
                       {row.product_name}
                     </div>
-                    <div className="text-[11px] font-mono text-slate-500 mt-0.5">
-                      {row.product_code} • {row.ring_size}
+                    <div className="text-[11px] text-slate-500 mt-0.5 tabular-nums">
+                      <span className="font-mono">{row.product_code}</span> • {row.ring_size}
                     </div>
                   </td>
-                  <td className="py-2.5 px-3.5 text-right font-mono tabular-nums font-semibold text-slate-700 whitespace-nowrap">
+                  <td className="py-2.5 px-3.5 text-right font-sans tabular-nums font-semibold text-slate-700 whitespace-nowrap">
                     {row.system_stock}
                   </td>
-                  <td className="py-2.5 px-3.5 text-right font-mono tabular-nums font-bold text-slate-900 whitespace-nowrap">
+                  <td className="py-2.5 px-3.5 text-right font-sans tabular-nums font-bold text-slate-900 whitespace-nowrap">
                     {row.physical_stock}
                   </td>
                   <td className="py-2.5 px-3.5 text-center whitespace-nowrap">

@@ -124,7 +124,7 @@ export default function OpnameReviewModal({ mode, item, onClose, onSuccess }) {
                 <div className="text-[10px] uppercase text-slate-400 font-semibold">
                   Stok Sistem
                 </div>
-                <div className="font-mono font-bold text-sm text-slate-700 mt-0.5">
+                <div className="font-sans tabular-nums font-bold text-sm text-slate-700 mt-0.5">
                   {item.system_stock}
                 </div>
               </div>
@@ -132,7 +132,7 @@ export default function OpnameReviewModal({ mode, item, onClose, onSuccess }) {
                 <div className="text-[10px] uppercase text-slate-400 font-semibold">
                   Hitung Fisik
                 </div>
-                <div className="font-mono font-bold text-sm text-slate-900 mt-0.5">
+                <div className="font-sans tabular-nums font-bold text-sm text-slate-900 mt-0.5">
                   {item.physical_stock}
                 </div>
               </div>
@@ -141,7 +141,7 @@ export default function OpnameReviewModal({ mode, item, onClose, onSuccess }) {
                   Selisih
                 </div>
                 <div
-                  className={`font-mono font-bold text-sm mt-0.5 ${
+                  className={`font-sans tabular-nums font-bold text-sm mt-0.5 ${
                     item.difference < 0
                       ? 'text-rose-600'
                       : item.difference > 0
@@ -168,8 +168,8 @@ export default function OpnameReviewModal({ mode, item, onClose, onSuccess }) {
             {isApprove ? (
               <span>
                 Saldo stok produk akan diperbarui dari{' '}
-                <b className="font-mono">{item.system_stock}</b> menjadi{' '}
-                <b className="font-mono">{item.physical_stock} unit</b> dan
+                <b className="font-sans tabular-nums">{item.system_stock}</b> menjadi{' '}
+                <b className="font-sans tabular-nums">{item.physical_stock} unit</b> dan
                 dicatat ke Kartu Stok (Mutasi Penyesuaian).
               </span>
             ) : (

@@ -153,7 +153,7 @@ export default function InboundPage() {
                 Tanggal Penerimaan <span className="text-rose-600">*</span>
               </label>
               <input
-                className={`${inputCls(errors.received_date)} font-mono`}
+                className={`${inputCls(errors.received_date)} font-sans tabular-nums`}
                 type="date"
                 value={header.received_date}
                 onChange={setH('received_date')}
@@ -236,7 +236,7 @@ export default function InboundPage() {
                           <div className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] text-slate-500">
                             <span>Stok saat ini:</span>
                             <span
-                              className={`px-1.5 py-0.2 rounded font-mono font-semibold border ${
+                              className={`px-1.5 py-0.2 rounded font-sans tabular-nums font-semibold border ${
                                 p.current_stock > 0
                                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                   : 'bg-rose-50 text-rose-700 border-rose-200'
@@ -249,7 +249,7 @@ export default function InboundPage() {
                       </td>
                       <td className="py-2.5 px-3.5">
                         <input
-                          className={`${inputCls(re(r.key).quantity)} text-right font-mono tabular-nums`}
+                          className={`${inputCls(re(r.key).quantity)} text-right font-sans tabular-nums`}
                           type="number"
                           min="1"
                           step="1"
@@ -268,7 +268,7 @@ export default function InboundPage() {
                             Rp
                           </span>
                           <input
-                            className={`${inputCls(re(r.key).purchase_price)} pl-8 text-right font-mono tabular-nums`}
+                            className={`${inputCls(re(r.key).purchase_price)} pl-8 text-right font-sans tabular-nums`}
                             type="text"
                             inputMode="numeric"
                             value={formatThousandDigits(r.purchase_price)}
@@ -286,7 +286,7 @@ export default function InboundPage() {
                           </div>
                         )}
                       </td>
-                      <td className="py-2.5 px-3.5 pt-5 text-right font-mono tabular-nums font-semibold text-slate-900 whitespace-nowrap">
+                      <td className="py-2.5 px-3.5 pt-5 text-right font-sans tabular-nums font-semibold text-slate-900 whitespace-nowrap">
                         {rupiah(lineSubtotal(r))}
                       </td>
                       <td className="py-2.5 px-3.5 pt-3.5 text-center">

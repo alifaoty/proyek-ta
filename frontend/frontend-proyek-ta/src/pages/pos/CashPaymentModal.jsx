@@ -135,7 +135,7 @@ export default function CashPaymentModal({
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
               Total Tagihan
             </span>
-            <span className="font-mono tabular-nums text-xl font-bold text-white">
+            <span className="font-sans tabular-nums text-xl font-bold text-white">
               {rupiah(grandTotal)}
             </span>
           </div>
@@ -157,7 +157,7 @@ export default function CashPaymentModal({
                 value={formatThousandDigits(paidAmount)}
                 onChange={(e) => setPaidAmount(parseDigits(e.target.value))}
                 disabled={submitting}
-                className="w-full h-11 pl-10 pr-3.5 bg-white border border-slate-300 rounded-lg font-mono tabular-nums text-base font-bold text-slate-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                className="w-full h-11 pl-10 pr-3.5 bg-white border border-slate-300 rounded-lg font-sans tabular-nums text-base font-bold text-slate-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition"
                 placeholder="0"
               />
             </div>
@@ -178,7 +178,7 @@ export default function CashPaymentModal({
                   key={sc.value}
                   type="button"
                   onClick={() => setPaidAmount(String(sc.value))}
-                  className="h-8 px-2 rounded-md border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-mono text-[11px] font-semibold transition cursor-pointer"
+                  className="h-8 px-2 rounded-md border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-sans tabular-nums text-[11px] font-semibold transition cursor-pointer"
                 >
                   {sc.label}
                 </button>
@@ -197,7 +197,7 @@ export default function CashPaymentModal({
             <span className="text-xs font-semibold uppercase tracking-wider">
               {isSufficient ? "Uang Kembalian" : "Kekurangan Bayar"}
             </span>
-            <span className="font-mono tabular-nums text-lg font-bold">
+            <span className="font-sans tabular-nums text-lg font-bold">
               {rupiah(Math.abs(changeAmount))}
             </span>
           </div>

@@ -1,4 +1,5 @@
 import { History, Loader2 } from 'lucide-react';
+import SegmentedTabs from '../../components/common/SegmentedTabs';
 import {
   MutationTypeBadge,
   StockChangeValue,
@@ -47,22 +48,11 @@ export default function MutationHistoryTable({
           </select>
 
           {/* Filter Tab Jenis Mutasi */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg overflow-x-auto">
-            {MUTATION_FILTER_TABS.map((t) => (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => onTypeFilterChange(t.key)}
-                className={`h-7 px-2.5 rounded-md text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
-                  typeFilter === t.key
-                    ? 'bg-white text-slate-900 shadow-2xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+          <SegmentedTabs
+            tabs={MUTATION_FILTER_TABS}
+            value={typeFilter}
+            onChange={onTypeFilterChange}
+          />
         </div>
       </div>
 
@@ -99,7 +89,7 @@ export default function MutationHistoryTable({
                     <div className="font-mono font-bold text-slate-900">
                       {row.reference_code || '—'}
                     </div>
-                    <div className="font-mono text-[11px] text-slate-500 mt-0.5">
+                    <div className="font-sans tabular-nums text-[11px] text-slate-500 mt-0.5">
                       {formatDateTime(row.created_at)}
                     </div>
                   </td>
@@ -107,8 +97,8 @@ export default function MutationHistoryTable({
                     <div className="font-semibold text-slate-900">
                       {row.product_name}
                     </div>
-                    <div className="text-[11px] font-mono text-slate-500 mt-0.5">
-                      {row.product_code} • {row.ring_size}
+                    <div className="text-[11px] text-slate-500 mt-0.5 tabular-nums">
+                      <span className="font-mono">{row.product_code}</span> • {row.ring_size}
                     </div>
                   </td>
                   <td className="py-2.5 px-3.5 text-center whitespace-nowrap">
@@ -117,7 +107,7 @@ export default function MutationHistoryTable({
                   <td className="py-2.5 px-3.5 text-right whitespace-nowrap">
                     <StockChangeValue value={row.quantity_change} />
                   </td>
-                  <td className="py-2.5 px-3.5 text-right font-mono tabular-nums font-bold text-slate-900 whitespace-nowrap">
+                  <td className="py-2.5 px-3.5 text-right font-sans tabular-nums font-bold text-slate-900 whitespace-nowrap">
                     {row.stock_after} unit
                   </td>
                   <td className="py-2.5 px-3.5 max-w-xs">

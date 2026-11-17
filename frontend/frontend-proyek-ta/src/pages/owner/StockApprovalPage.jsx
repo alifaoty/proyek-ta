@@ -75,7 +75,7 @@ export default function StockApprovalPage() {
               <h1 className="text-lg font-bold text-slate-900 tracking-tight">
                 Persetujuan Stok Opname
               </h1>
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-sans tabular-nums font-bold bg-amber-50 text-amber-700 border border-amber-200">
                 {pendingList.length} Pending
               </span>
             </div>
@@ -110,7 +110,7 @@ export default function StockApprovalPage() {
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
             <span>Antrean Otorisasi Penyesuaian Stok (Owner Only)</span>
           </div>
-          <span className="font-mono text-[11px] text-slate-300">
+          <span className="font-sans tabular-nums text-[11px] text-slate-300">
             Menampilkan: {pendingList.length} dokumen pending
           </span>
         </div>
@@ -161,8 +161,8 @@ export default function StockApprovalPage() {
                       <div className="font-mono font-bold text-slate-900">
                         {row.opname_code}
                       </div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">
-                        <span className="font-mono">{formatDateTime(row.created_at)}</span>
+                      <div className="text-[11px] text-slate-500 mt-0.5 tabular-nums">
+                        <span>{formatDateTime(row.created_at)}</span>
                         {' • '}
                         <span className="font-medium text-slate-700">
                           {row.checked_by_name || '—'}
@@ -173,14 +173,14 @@ export default function StockApprovalPage() {
                       <div className="font-semibold text-slate-900">
                         {row.product_name}
                       </div>
-                      <div className="text-[11px] font-mono text-slate-500 mt-0.5">
-                        {row.product_code} • {row.ring_size}
+                      <div className="text-[11px] text-slate-500 mt-0.5 tabular-nums">
+                        <span className="font-mono">{row.product_code}</span> • {row.ring_size}
                       </div>
                     </td>
-                    <td className="py-2.5 px-3.5 text-right font-mono tabular-nums font-semibold text-slate-700 whitespace-nowrap">
+                    <td className="py-2.5 px-3.5 text-right font-sans tabular-nums font-semibold text-slate-700 whitespace-nowrap">
                       {row.system_stock}
                     </td>
-                    <td className="py-2.5 px-3.5 text-right font-mono tabular-nums font-bold text-slate-900 whitespace-nowrap">
+                    <td className="py-2.5 px-3.5 text-right font-sans tabular-nums font-bold text-slate-900 whitespace-nowrap">
                       {row.physical_stock}
                     </td>
                     <td className="py-2.5 px-3.5 text-center whitespace-nowrap">
