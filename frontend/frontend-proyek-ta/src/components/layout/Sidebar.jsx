@@ -75,7 +75,7 @@ export default function Sidebar({ open = false, onClose }) {
       {/* Daftar Navigasi */}
       <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-5">
         <div>
-          <div className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 text-left">
+          <div className="px-3 mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 text-left">
             Operasional
           </div>
           <div className="space-y-1">
@@ -87,7 +87,7 @@ export default function Sidebar({ open = false, onClose }) {
 
         {user?.role === 'owner' && (
           <div>
-            <div className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 text-left">
+            <div className="px-3 mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 text-left">
               Khusus Owner
             </div>
             <div className="space-y-1">

@@ -75,7 +75,7 @@ export default function StockApprovalPage() {
               <h1 className="text-lg font-bold text-slate-900 tracking-tight">
                 Persetujuan Stok Opname
               </h1>
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-sans tabular-nums font-bold bg-amber-50 text-amber-700 border border-amber-200">
                 {pendingList.length} Pending
               </span>
             </div>
@@ -110,7 +110,7 @@ export default function StockApprovalPage() {
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
             <span>Antrean Otorisasi Penyesuaian Stok (Owner Only)</span>
           </div>
-          <span className="font-mono text-[11px] text-slate-300">
+          <span className="font-sans tabular-nums text-[11px] text-slate-300">
             Menampilkan: {pendingList.length} dokumen pending
           </span>
         </div>
@@ -119,28 +119,26 @@ export default function StockApprovalPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                <th className="py-3 px-4">No Dokumen</th>
-                <th className="py-3 px-4">Tanggal &amp; Jam</th>
-                <th className="py-3 px-4">Staf Penginput</th>
-                <th className="py-3 px-4">Nama Produk &amp; Ring</th>
-                <th className="py-3 px-4 text-right">Stok Sistem</th>
-                <th className="py-3 px-4 text-right">Hitung Fisik</th>
-                <th className="py-3 px-4 text-center">Selisih Kuantitas</th>
-                <th className="py-3 px-4">Catatan Staf</th>
-                <th className="py-3 px-4 text-center">Aksi</th>
+                <th className="py-2.5 px-3.5">Dokumen &amp; Penginput</th>
+                <th className="py-2.5 px-3.5">Nama Produk &amp; Ring</th>
+                <th className="py-2.5 px-3.5 text-right">Stok Sistem</th>
+                <th className="py-2.5 px-3.5 text-right">Hitung Fisik</th>
+                <th className="py-2.5 px-3.5 text-center">Selisih</th>
+                <th className="py-2.5 px-3.5">Catatan Staf</th>
+                <th className="py-2.5 px-3.5 text-center">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200/70 text-xs">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                  <td colSpan={7} className="py-12 text-center text-slate-400">
                     <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1.5 text-blue-600" />
                     <span>Memuat daftar pengajuan pending...</span>
                   </td>
                 </tr>
               ) : pendingList.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center">
+                  <td colSpan={7} className="py-12 text-center">
                     <div className="w-10 h-10 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto mb-2">
                       <CheckCircle2 className="w-5 h-5" />
                     </div>
@@ -159,43 +157,48 @@ export default function StockApprovalPage() {
                     key={row.id}
                     className="hover:bg-slate-50/80 transition"
                   >
-                    <td className="py-3 px-4 font-mono font-bold text-slate-900 whitespace-nowrap">
-                      {row.opname_code}
+                    <td className="py-2.5 px-3.5 whitespace-nowrap">
+                      <div className="font-mono font-bold text-slate-900">
+                        {row.opname_code}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5 tabular-nums">
+                        <span>{formatDateTime(row.created_at)}</span>
+                        {' • '}
+                        <span className="font-medium text-slate-700">
+                          {row.checked_by_name || '—'}
+                        </span>
+                      </div>
                     </td>
-                    <td className="py-3 px-4 font-mono text-[11px] text-slate-600 whitespace-nowrap">
-                      {formatDateTime(row.created_at)}
-                    </td>
-                    <td className="py-3 px-4 font-medium text-slate-800 whitespace-nowrap">
-                      {row.checked_by_name || '—'}
-                    </td>
-                    <td className="py-3 px-4">
+                    <td className="py-2.5 px-3.5">
                       <div className="font-semibold text-slate-900">
                         {row.product_name}
                       </div>
-                      <div className="text-[11px] font-mono text-slate-500">
-                        {row.product_code} • {row.ring_size}
+                      <div className="text-[11px] text-slate-500 mt-0.5 tabular-nums">
+                        <span className="font-mono">{row.product_code}</span> • {row.ring_size}
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-right font-mono tabular-nums font-semibold text-slate-700">
+                    <td className="py-2.5 px-3.5 text-right font-sans tabular-nums font-semibold text-slate-700 whitespace-nowrap">
                       {row.system_stock}
                     </td>
-                    <td className="py-3 px-4 text-right font-mono tabular-nums font-bold text-slate-900">
+                    <td className="py-2.5 px-3.5 text-right font-sans tabular-nums font-bold text-slate-900 whitespace-nowrap">
                       {row.physical_stock}
                     </td>
-                    <td className="py-3 px-4 text-center whitespace-nowrap">
+                    <td className="py-2.5 px-3.5 text-center whitespace-nowrap">
                       <DifferenceBadge difference={row.difference} minusLabel="Kurang" />
                     </td>
-                    <td className="py-3 px-4 max-w-xs text-slate-600">
-                      {row.notes || <span className="text-slate-400">—</span>}
+                    <td className="py-2.5 px-3.5 max-w-[220px] text-slate-600">
+                      <div className="line-clamp-2">
+                        {row.notes || <span className="text-slate-400">—</span>}
+                      </div>
                     </td>
-                    <td className="py-3 px-4 text-center whitespace-nowrap">
+                    <td className="py-2.5 px-3.5 text-center whitespace-nowrap">
                       <div className="inline-flex items-center gap-1.5">
                         <button
                           type="button"
                           onClick={() =>
                             setReviewTarget({ mode: 'approve', item: row })
                           }
-                          className="h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-semibold inline-flex items-center gap-1 shadow-2xs transition cursor-pointer"
+                          className="h-8 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-semibold inline-flex items-center gap-1 shadow-2xs transition cursor-pointer"
                         >
                           <Check className="w-3.5 h-3.5" />
                           <span>Setujui</span>
@@ -205,7 +208,7 @@ export default function StockApprovalPage() {
                           onClick={() =>
                             setReviewTarget({ mode: 'reject', item: row })
                           }
-                          className="h-8 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-semibold inline-flex items-center gap-1 shadow-2xs transition cursor-pointer"
+                          className="h-8 px-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-semibold inline-flex items-center gap-1 shadow-2xs transition cursor-pointer"
                         >
                           <X className="w-3.5 h-3.5" />
                           <span>Tolak</span>

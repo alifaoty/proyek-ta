@@ -42,16 +42,16 @@ export default function ReceiptModal({ receipt, onNewTransaction }) {
             </div>
           </div>
 
-          <div className="space-y-1 text-[11px] font-mono border-b border-dashed border-slate-300 pb-2.5">
+          <div className="space-y-1 text-[11px] font-sans tabular-nums border-b border-dashed border-slate-300 pb-2.5">
             <div className="flex justify-between">
               <span className="text-slate-500">No. Faktur:</span>
-              <span className="font-bold text-slate-900">
+              <span className="font-mono font-bold text-slate-900">
                 {receipt.invoice_code}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Tanggal:</span>
-              <span>
+              <span className="text-right">
                 {new Date(receipt.created_at).toLocaleString("id-ID", {
                   dateStyle: "short",
                   timeStyle: "short",
@@ -60,11 +60,11 @@ export default function ReceiptModal({ receipt, onNewTransaction }) {
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Kasir:</span>
-              <span>{receipt.cashier_name}</span>
+              <span className="text-right">{receipt.cashier_name}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Metode Bayar:</span>
-              <span className="uppercase font-semibold">
+              <span className="uppercase font-semibold text-right">
                 {receipt.payment_method}
               </span>
             </div>
@@ -84,20 +84,18 @@ export default function ReceiptModal({ receipt, onNewTransaction }) {
           )}
 
           {/* Daftar Item Belanja */}
-          <div className="space-y-2 border-b border-dashed border-slate-300 pb-3">
+          <div className="space-y-2 border-b border-dashed border-slate-300 pb-3 font-sans tabular-nums">
             {receipt.items.map((it, idx) => (
               <div key={idx} className="text-[11px]">
                 <div className="font-semibold text-slate-900">
                   {it.product_name}{" "}
-                  <span className="font-mono text-slate-500">
-                    ({it.ring_size})
-                  </span>
+                  <span className="text-slate-500">({it.ring_size})</span>
                 </div>
-                <div className="flex justify-between font-mono text-slate-600 mt-0.5">
+                <div className="flex justify-between items-baseline text-slate-600 mt-0.5">
                   <span>
                     {it.quantity} x {rupiah(it.unit_price)}
                   </span>
-                  <span className="font-semibold text-slate-900">
+                  <span className="font-semibold text-slate-900 text-right tabular-nums">
                     {rupiah(it.subtotal)}
                   </span>
                 </div>
@@ -106,30 +104,40 @@ export default function ReceiptModal({ receipt, onNewTransaction }) {
           </div>
 
           {/* Ringkasan Pembayaran */}
-          <div className="space-y-1 font-mono text-xs">
-            <div className="flex justify-between text-slate-600">
+          <div className="space-y-1 font-sans tabular-nums text-xs">
+            <div className="flex justify-between items-baseline text-slate-600">
               <span>Subtotal</span>
-              <span>{rupiah(receipt.subtotal)}</span>
+              <span className="text-right tabular-nums">
+                {rupiah(receipt.subtotal)}
+              </span>
             </div>
             {receipt.discount > 0 && (
-              <div className="flex justify-between text-rose-600">
+              <div className="flex justify-between items-baseline text-rose-600">
                 <span>Diskon</span>
-                <span>- {rupiah(receipt.discount)}</span>
+                <span className="text-right tabular-nums">
+                  - {rupiah(receipt.discount)}
+                </span>
               </div>
             )}
-            <div className="flex justify-between text-sm font-bold text-slate-900 pt-1 border-t border-slate-200">
+            <div className="flex justify-between items-baseline text-sm font-bold text-slate-900 pt-1 border-t border-slate-200">
               <span>TOTAL</span>
-              <span>{rupiah(receipt.grand_total)}</span>
+              <span className="text-right tabular-nums">
+                {rupiah(receipt.grand_total)}
+              </span>
             </div>
             {!isQris && (
               <>
-                <div className="flex justify-between text-slate-600 pt-1">
+                <div className="flex justify-between items-baseline text-slate-600 pt-1">
                   <span>Tunai Diterima</span>
-                  <span>{rupiah(receipt.paid_amount)}</span>
+                  <span className="text-right tabular-nums">
+                    {rupiah(receipt.paid_amount)}
+                  </span>
                 </div>
-                <div className="flex justify-between font-bold text-emerald-700">
+                <div className="flex justify-between items-baseline font-bold text-emerald-700">
                   <span>Kembalian</span>
-                  <span>{rupiah(receipt.change_amount)}</span>
+                  <span className="text-right tabular-nums">
+                    {rupiah(receipt.change_amount)}
+                  </span>
                 </div>
               </>
             )}

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  AlertTriangle,
   Loader2,
   PackageCheck,
   RefreshCw,
@@ -194,7 +193,7 @@ export default function OutboundPage() {
                   <PackageCheck className="w-4 h-4 shrink-0" />
                   <span>
                     Sisa Stok Fisik:{' '}
-                    <b className="font-mono tabular-nums font-bold">
+                    <b className="font-sans tabular-nums font-bold">
                       {product.current_stock}
                     </b>{' '}
                     unit
@@ -211,7 +210,7 @@ export default function OutboundPage() {
               <input
                 className={`${inputCls(
                   errors.quantity || overStock
-                )} max-w-[200px] font-mono tabular-nums`}
+                )} max-w-[200px] font-sans tabular-nums`}
                 type="number"
                 min="1"
                 step="1"
@@ -220,16 +219,12 @@ export default function OutboundPage() {
                 placeholder="1"
               />
               {overStock && (
-                <div className="mt-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2 font-medium">
-                  <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
-                  <span>
-                    Jumlah melebihi stok fisik (
-                    <b className="font-mono">{product.current_stock}</b> unit).
-                  </span>
+                <div className="text-xs text-red-600 font-medium mt-1 font-sans tabular-nums">
+                  Jumlah melebihi stok fisik ({product.current_stock} unit).
                 </div>
               )}
               {errors.quantity && !overStock && (
-                <div className="text-xs text-rose-600 font-medium mt-1">
+                <div className="text-xs text-red-600 font-medium mt-1">
                   {errors.quantity}
                 </div>
               )}

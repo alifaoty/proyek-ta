@@ -1,4 +1,5 @@
 import { History, Loader2 } from 'lucide-react';
+import SegmentedTabs from '../../components/common/SegmentedTabs';
 import {
   MutationTypeBadge,
   StockChangeValue,
@@ -47,22 +48,11 @@ export default function MutationHistoryTable({
           </select>
 
           {/* Filter Tab Jenis Mutasi */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg overflow-x-auto">
-            {MUTATION_FILTER_TABS.map((t) => (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => onTypeFilterChange(t.key)}
-                className={`h-7 px-2.5 rounded-md text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
-                  typeFilter === t.key
-                    ? 'bg-white text-slate-900 shadow-2xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+          <SegmentedTabs
+            tabs={MUTATION_FILTER_TABS}
+            value={typeFilter}
+            onChange={onTypeFilterChange}
+          />
         </div>
       </div>
 
@@ -70,61 +60,63 @@ export default function MutationHistoryTable({
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-              <th className="py-3 px-4">Tanggal &amp; Waktu</th>
-              <th className="py-3 px-4">Produk</th>
-              <th className="py-3 px-4 text-center">Jenis Mutasi</th>
-              <th className="py-3 px-4">Referensi</th>
-              <th className="py-3 px-4 text-right">Perubahan Stok</th>
-              <th className="py-3 px-4 text-right">Sisa Stok Akhir</th>
-              <th className="py-3 px-4">Keterangan</th>
-              <th className="py-3 px-4">Petugas / User</th>
+              <th className="py-2.5 px-3.5">Referensi &amp; Waktu</th>
+              <th className="py-2.5 px-3.5">Produk &amp; Ring</th>
+              <th className="py-2.5 px-3.5 text-center">Jenis Mutasi</th>
+              <th className="py-2.5 px-3.5 text-right">Perubahan</th>
+              <th className="py-2.5 px-3.5 text-right">Stok Akhir</th>
+              <th className="py-2.5 px-3.5">Keterangan &amp; Petugas</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200/70 text-xs">
             {loadingMutations ? (
               <tr>
-                <td colSpan={8} className="py-10 text-center text-slate-400">
+                <td colSpan={6} className="py-10 text-center text-slate-400">
                   <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1.5 text-blue-600" />
                   <span>Memuat riwayat kartu stok...</span>
                 </td>
               </tr>
             ) : mutations.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-10 text-center text-slate-400">
+                <td colSpan={6} className="py-10 text-center text-slate-400">
                   Belum ada riwayat log mutasi persediaan yang sesuai filter.
                 </td>
               </tr>
             ) : (
               mutations.map((row) => (
                 <tr key={row.id} className="hover:bg-slate-50/80 transition">
-                  <td className="py-3 px-4 font-mono text-[11px] text-slate-600 whitespace-nowrap">
-                    {formatDateTime(row.created_at)}
+                  <td className="py-2.5 px-3.5 whitespace-nowrap">
+                    <div className="font-mono font-bold text-slate-900">
+                      {row.reference_code || '—'}
+                    </div>
+                    <div className="font-sans tabular-nums text-[11px] text-slate-500 mt-0.5">
+                      {formatDateTime(row.created_at)}
+                    </div>
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="py-2.5 px-3.5">
                     <div className="font-semibold text-slate-900">
                       {row.product_name}
                     </div>
-                    <div className="text-[11px] font-mono text-slate-500">
-                      {row.product_code} • {row.ring_size}
+                    <div className="text-[11px] text-slate-500 mt-0.5 tabular-nums">
+                      <span className="font-mono">{row.product_code}</span> • {row.ring_size}
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-center whitespace-nowrap">
+                  <td className="py-2.5 px-3.5 text-center whitespace-nowrap">
                     <MutationTypeBadge type={row.mutation_type} />
                   </td>
-                  <td className="py-3 px-4 font-mono font-bold text-slate-900 whitespace-nowrap">
-                    {row.reference_code || '—'}
-                  </td>
-                  <td className="py-3 px-4 text-right whitespace-nowrap">
+                  <td className="py-2.5 px-3.5 text-right whitespace-nowrap">
                     <StockChangeValue value={row.quantity_change} />
                   </td>
-                  <td className="py-3 px-4 text-right font-mono tabular-nums font-bold text-slate-900 whitespace-nowrap">
-                    {row.stock_after}
+                  <td className="py-2.5 px-3.5 text-right font-sans tabular-nums font-bold text-slate-900 whitespace-nowrap">
+                    {row.stock_after} unit
                   </td>
-                  <td className="py-3 px-4 max-w-xs text-slate-700">
-                    {row.notes || <span className="text-slate-400">—</span>}
-                  </td>
-                  <td className="py-3 px-4 text-slate-700 whitespace-nowrap">
-                    {row.actor_name || '—'}
+                  <td className="py-2.5 px-3.5 max-w-xs">
+                    <div className="text-slate-800 line-clamp-2">
+                      {row.notes || <span className="text-slate-400">—</span>}
+                    </div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">
+                      Oleh: <span className="font-medium text-slate-700">{row.actor_name || '—'}</span>
+                    </div>
                   </td>
                 </tr>
               ))

@@ -193,8 +193,12 @@ const updateProduct = async (req, res) => {
     const [existing] = await db.execute('SELECT * FROM products WHERE id = ? LIMIT 1', [id]);
     if (existing.length === 0) return fail(res, 404, 'Produk tidak ditemukan');
 
-    // Field yang tidak dikirim memakai nilai lama, lalu seluruh payload divalidasi
-    const merged = { ...existing[0], ...(req.body || {}) };
+    // Field yang tidak dikirim memakai nilai lama; current_stock dikunci agar tidak bisa diubah via Edit Produk
+    const merged = {
+      ...existing[0],
+      ...(req.body || {}),
+      current_stock: existing[0].current_stock,
+    };
     const { error, data } = validatePayload(merged);
     if (error) return fail(res, 400, error);
 
@@ -206,10 +210,10 @@ const updateProduct = async (req, res) => {
 
     await db.execute(
       `UPDATE products SET code = ?, name = ?, category = ?, item_condition = ?, ring_size = ?,
-        specification = ?, purchase_price = ?, selling_price = ?, current_stock = ? WHERE id = ?`,
+        specification = ?, purchase_price = ?, selling_price = ? WHERE id = ?`,
       [
         data.code, data.name, data.category, data.item_condition, data.ring_size,
-        data.specification, data.purchase_price, data.selling_price, data.current_stock, id,
+        data.specification, data.purchase_price, data.selling_price, id,
       ]
     );
 

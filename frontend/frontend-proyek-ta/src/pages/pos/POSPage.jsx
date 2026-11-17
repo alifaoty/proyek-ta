@@ -16,9 +16,14 @@ import {
 } from "lucide-react";
 import { getProducts } from "../../api/productApi";
 import { createQrisTransaction } from "../../api/transactionApi";
+import SegmentedTabs from "../../components/common/SegmentedTabs";
 import { POS_TABS as TABS } from "../../constants/productConstants";
 import useAuth from "../../hooks/useAuth";
-import { rupiah } from "../../utils/formatters";
+import {
+  formatThousandDigits,
+  parseDigits,
+  rupiah,
+} from "../../utils/formatters";
 import CashPaymentModal from "./CashPaymentModal";
 import POSProductCard from "./POSProductCard";
 import ReceiptModal from "./ReceiptModal";
@@ -185,7 +190,7 @@ export default function POSPage() {
   // Buka modal pembayaran tunai
   const handleOpenCashModal = () => {
     if (cartItems.length === 0 || hasOverStock) return;
-    setPaidAmount(String(grandTotal));
+    setPaidAmount(String(Math.round(Number(grandTotal || 0))));
     setCashModalOpen(true);
   };
 
@@ -322,21 +327,8 @@ export default function POSPage() {
             </div>
 
             {/* Segmented Tabs Filter */}
-            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pt-1 border-t border-slate-100">
-              {TABS.map((t) => (
-                <button
-                  key={t.key}
-                  type="button"
-                  onClick={() => setTab(t.key)}
-                  className={`h-8 px-3 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
-                    tab === t.key
-                      ? "bg-slate-900 text-white shadow-2xs"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
+            <div className="pt-1 border-t border-slate-100 flex items-center justify-start">
+              <SegmentedTabs tabs={TABS} value={tab} onChange={setTab} />
             </div>
           </div>
 
@@ -458,9 +450,9 @@ export default function POSPage() {
                         <div className="text-xs font-bold text-slate-900 truncate">
                           {item.name}
                         </div>
-                        <div className="text-[11px] font-mono text-slate-500">
-                          {item.code} • {item.ring_size} •{" "}
-                          {rupiah(item.selling_price)}
+                        <div className="text-[11px] text-slate-500 tabular-nums">
+                          <span className="font-mono">{item.code}</span> •{" "}
+                          {item.ring_size} • {rupiah(item.selling_price)}
                         </div>
                       </div>
                       <button
@@ -498,7 +490,7 @@ export default function POSPage() {
                               Math.max(1, parseInt(e.target.value, 10) || 1),
                             )
                           }
-                          className="w-10 h-7 text-center font-mono text-xs font-bold text-slate-900 border-x border-slate-200 outline-none"
+                          className="w-10 h-7 text-center font-sans tabular-nums text-xs font-bold text-slate-900 border-x border-slate-200 outline-none"
                         />
                         <button
                           type="button"
@@ -513,11 +505,11 @@ export default function POSPage() {
                       </div>
 
                       <div className="text-right">
-                        <div className="font-mono tabular-nums text-xs font-bold text-slate-900">
+                        <div className="font-sans tabular-nums text-xs font-bold text-slate-900">
                           {rupiah(lineTotal)}
                         </div>
                         {overLimit && (
-                          <div className="text-[10px] text-rose-600 font-semibold">
+                          <div className="text-[10px] text-rose-600 font-semibold tabular-nums">
                             Maks {item.current_stock} unit
                           </div>
                         )}
@@ -534,13 +526,13 @@ export default function POSPage() {
             <div className="space-y-1.5 text-xs">
               <div className="flex items-center justify-between text-slate-600">
                 <span>Total Item</span>
-                <span className="font-mono font-semibold text-slate-900">
+                <span className="font-sans tabular-nums font-semibold text-slate-900">
                   {cartItems.length} jenis ({totalUnits} unit)
                 </span>
               </div>
               <div className="flex items-center justify-between text-slate-600">
                 <span>Subtotal</span>
-                <span className="font-mono tabular-nums font-semibold text-slate-900">
+                <span className="font-sans tabular-nums font-semibold text-slate-900">
                   {rupiah(subtotal)}
                 </span>
               </div>
@@ -553,22 +545,28 @@ export default function POSPage() {
                 >
                   Diskon (Rp)
                 </label>
-                <input
-                  id="pos-discount"
-                  type="number"
-                  min="0"
-                  max={subtotal}
-                  step="1000"
-                  value={discount === 0 ? "" : discount}
-                  onChange={(e) =>
-                    setDiscount(
-                      e.target.value === "" ? 0 : Number(e.target.value),
-                    )
-                  }
-                  placeholder="0"
-                  disabled={cartItems.length === 0}
-                  className="w-36 h-8 px-2.5 bg-white border border-slate-300 rounded-lg text-right font-mono tabular-nums text-xs text-slate-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition disabled:bg-slate-100"
-                />
+                <div className="relative w-40">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 pointer-events-none">
+                    Rp
+                  </span>
+                  <input
+                    id="pos-discount"
+                    type="text"
+                    inputMode="numeric"
+                    value={
+                      discount === 0 ? "" : formatThousandDigits(discount)
+                    }
+                    onChange={(e) => {
+                      const raw = parseDigits(e.target.value);
+                      setDiscount(
+                        raw === "" ? 0 : Math.min(subtotal, Number(raw)),
+                      );
+                    }}
+                    placeholder="0"
+                    disabled={cartItems.length === 0}
+                    className="w-full h-8 pl-8 pr-2.5 bg-white border border-slate-300 rounded-lg text-right font-sans tabular-nums text-xs text-slate-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition disabled:bg-slate-100"
+                  />
+                </div>
               </div>
             </div>
 
@@ -577,7 +575,7 @@ export default function POSPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
                 Total Tagihan
               </span>
-              <span className="font-mono tabular-nums text-2xl font-bold text-slate-900">
+              <span className="font-sans tabular-nums text-2xl font-bold text-slate-900">
                 {rupiah(grandTotal)}
               </span>
             </div>
