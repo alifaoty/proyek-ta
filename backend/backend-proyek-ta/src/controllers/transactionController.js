@@ -1,22 +1,10 @@
 const db = require('../config/database');
 const { logAudit } = require('../utils/auditLogger');
+const { HttpError, fail } = require('../utils/httpHelper');
+const { isNonNegNumber, isPositiveInt } = require('../utils/validators');
 
 const PAYMENT_METHODS = ['cash', 'qris', 'va'];
 const PAYMENT_STATUSES = ['pending', 'settlement', 'expire', 'cancel'];
-
-const fail = (res, status, message) => res.status(status).json({ success: false, message });
-
-class HttpError extends Error {
-  constructor(status, message) {
-    super(message);
-    this.status = status;
-  }
-}
-
-const isPositiveInt = (v) =>
-  v !== '' && v !== null && v !== undefined && Number.isInteger(Number(v)) && Number(v) > 0;
-const isNonNegNumber = (v) =>
-  v !== '' && v !== null && v !== undefined && Number.isFinite(Number(v)) && Number(v) >= 0;
 
 /**
  * Validasi daftar item keranjang belanja POS.

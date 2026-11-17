@@ -1,5 +1,7 @@
 const db = require('../config/database');
 const { logAudit } = require('../utils/auditLogger');
+const { fail } = require('../utils/httpHelper');
+const { isValidId } = require('../utils/validators');
 
 const CATEGORIES = ['ban', 'velg'];
 const CONDITIONS = ['baru', 'bekas'];
@@ -18,13 +20,10 @@ const formatProduct = (row) => ({
   is_available: Boolean(row.is_available),
 });
 
-const fail = (res, status, message) => res.status(status).json({ success: false, message });
 const serverError = (res, error, label) => {
   console.error(`Kesalahan ${label}:`, error);
   return fail(res, 500, 'Terjadi kesalahan internal server');
 };
-
-const isValidId = (id) => /^\d+$/.test(String(id));
 
 /**
  * Validasi & normalisasi payload produk.
