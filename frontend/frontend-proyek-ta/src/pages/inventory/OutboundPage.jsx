@@ -1,28 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
-  History,
   Loader2,
   PackageCheck,
   RefreshCw,
 } from 'lucide-react';
 import { getProducts } from '../../api/productApi';
 import { createOutbound, getMutations } from '../../api/inventoryApi';
-
-const REASONS = [
-  { value: 'retur_rusak', label: 'Retur Rusak / Cacat Pabrik' },
-  { value: 'pemakaian_internal', label: 'Pemakaian Internal Bengkel' },
-  { value: 'peminjaman', label: 'Peminjaman Rekanan' },
-  { value: 'hilang', label: 'Barang Hilang' },
-];
-
-const MUTATION_FILTER_TABS = [
-  { key: '', label: 'Semua Mutasi' },
-  { key: 'masuk', label: 'Masuk' },
-  { key: 'penjualan', label: 'Penjualan' },
-  { key: 'keluar_non_penjualan', label: 'Keluar Non-Penjualan' },
-  { key: 'penyesuaian', label: 'Penyesuaian / Opname' },
-];
+import { OUTBOUND_REASONS as REASONS } from '../../constants/productConstants';
+import { validateOutboundForm } from '../../utils/inventoryValidator';
+import MutationHistoryTable from './MutationHistoryTable';
 
 const EMPTY = { product_id: '', quantity: '', reason: '', notes: '' };
 
@@ -32,78 +19,6 @@ const inputCls = (hasErr) =>
       ? 'border-rose-500 focus:border-rose-600 focus:ring-2 focus:ring-rose-100'
       : 'border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100'
   }`;
-
-const formatDateTime = (val) => {
-  if (!val) return '—';
-  const d = new Date(val);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleString('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
-
-function MutationTypeBadge({ type }) {
-  if (type === 'masuk') {
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-        Masuk
-      </span>
-    );
-  }
-  if (type === 'penjualan') {
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-        Penjualan
-      </span>
-    );
-  }
-  if (type === 'keluar_non_penjualan') {
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-        Keluar Non-Penjualan
-      </span>
-    );
-  }
-  if (type === 'penyesuaian') {
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
-        Penyesuaian / Opname
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-      {type || '—'}
-    </span>
-  );
-}
-
-function StockChangeValue({ value }) {
-  const num = Number(value || 0);
-  if (num > 0) {
-    return (
-      <span className="font-mono tabular-nums font-bold text-emerald-600">
-        +{num}
-      </span>
-    );
-  }
-  if (num < 0) {
-    return (
-      <span className="font-mono tabular-nums font-bold text-rose-600">
-        {num}
-      </span>
-    );
-  }
-  return (
-    <span className="font-mono tabular-nums font-semibold text-slate-500">
-      0
-    </span>
-  );
-}
 
 export default function OutboundPage() {
   const [products, setProducts] = useState([]);
@@ -170,13 +85,7 @@ export default function OutboundPage() {
 
   const submit = async (ev) => {
     ev.preventDefault();
-    const e = {};
-    if (!form.product_id) e.product_id = 'Pilih produk';
-    if (!(Number.isInteger(qty) && qty > 0))
-      e.quantity = 'Kuantitas harus bilangan bulat > 0';
-    else if (overStock)
-      e.quantity = `Melebihi stok fisik (${product.current_stock} unit)`;
-    if (!form.reason) e.reason = 'Pilih alasan mutasi';
+    const e = validateOutboundForm({ form, qty, overStock, product });
     setErrors(e);
     setApiError('');
     if (Object.keys(e).length) return;
@@ -393,132 +302,21 @@ export default function OutboundPage() {
       </form>
 
       {/* BAGIAN BAWAH: Tabel Riwayat Log Mutasi Persediaan */}
-      <div className="bg-white border border-slate-200/80 rounded-xl shadow-sm overflow-hidden text-left">
-        <div className="px-5 py-3.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <History className="w-4 h-4 text-blue-600" />
-            <div>
-              <h2 className="text-sm font-bold text-slate-900">
-                Riwayat Log Mutasi Persediaan
-              </h2>
-              <p className="text-[11px] text-slate-500">
-                Kartu stok seluruh pergerakan masuk, penjualan POS, keluar
-                non-penjualan, dan penyesuaian opname
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Filter Produk */}
-            <select
-              value={productFilter}
-              onChange={(e) => {
-                setLoadingMutations(true);
-                setProductFilter(e.target.value);
-              }}
-              className="h-8 px-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-700 outline-none focus:border-blue-600"
-            >
-              <option value="">Semua Produk</option>
-              {products.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.code} — {p.name}
-                </option>
-              ))}
-            </select>
-
-            {/* Filter Tab Jenis Mutasi */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg overflow-x-auto">
-              {MUTATION_FILTER_TABS.map((t) => (
-                <button
-                  key={t.key}
-                  type="button"
-                  onClick={() => {
-                    setLoadingMutations(true);
-                    setTypeFilter(t.key);
-                  }}
-                  className={`h-7 px-2.5 rounded-md text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
-                    typeFilter === t.key
-                      ? 'bg-white text-slate-900 shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                <th className="py-3 px-4">Tanggal &amp; Waktu</th>
-                <th className="py-3 px-4">Produk</th>
-                <th className="py-3 px-4 text-center">Jenis Mutasi</th>
-                <th className="py-3 px-4">Referensi</th>
-                <th className="py-3 px-4 text-right">Perubahan Stok</th>
-                <th className="py-3 px-4 text-right">Sisa Stok Akhir</th>
-                <th className="py-3 px-4">Keterangan</th>
-                <th className="py-3 px-4">Petugas / User</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200/70 text-xs">
-              {loadingMutations ? (
-                <tr>
-                  <td colSpan={8} className="py-10 text-center text-slate-400">
-                    <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1.5 text-blue-600" />
-                    <span>Memuat riwayat kartu stok...</span>
-                  </td>
-                </tr>
-              ) : mutations.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-10 text-center text-slate-400">
-                    Belum ada riwayat log mutasi persediaan yang sesuai filter.
-                  </td>
-                </tr>
-              ) : (
-                mutations.map((row) => (
-                  <tr
-                    key={row.id}
-                    className="hover:bg-slate-50/80 transition"
-                  >
-                    <td className="py-3 px-4 font-mono text-[11px] text-slate-600 whitespace-nowrap">
-                      {formatDateTime(row.created_at)}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="font-semibold text-slate-900">
-                        {row.product_name}
-                      </div>
-                      <div className="text-[11px] font-mono text-slate-500">
-                        {row.product_code} • {row.ring_size}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-center whitespace-nowrap">
-                      <MutationTypeBadge type={row.mutation_type} />
-                    </td>
-                    <td className="py-3 px-4 font-mono font-bold text-slate-900 whitespace-nowrap">
-                      {row.reference_code || '—'}
-                    </td>
-                    <td className="py-3 px-4 text-right whitespace-nowrap">
-                      <StockChangeValue value={row.quantity_change} />
-                    </td>
-                    <td className="py-3 px-4 text-right font-mono tabular-nums font-bold text-slate-900 whitespace-nowrap">
-                      {row.stock_after}
-                    </td>
-                    <td className="py-3 px-4 max-w-xs text-slate-700">
-                      {row.notes || <span className="text-slate-400">—</span>}
-                    </td>
-                    <td className="py-3 px-4 text-slate-700 whitespace-nowrap">
-                      {row.actor_name || '—'}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <MutationHistoryTable
+        products={products}
+        mutations={mutations}
+        loadingMutations={loadingMutations}
+        productFilter={productFilter}
+        typeFilter={typeFilter}
+        onProductFilterChange={(val) => {
+          setLoadingMutations(true);
+          setProductFilter(val);
+        }}
+        onTypeFilterChange={(val) => {
+          setLoadingMutations(true);
+          setTypeFilter(val);
+        }}
+      />
 
       {toast && (
         <div className="fixed right-5 bottom-5 z-50 px-4 py-2.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 shadow-lg">

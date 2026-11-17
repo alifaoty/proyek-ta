@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecret_toko_ban_velg_key_2026';
+const { JWT_SECRET } = require('../config/jwtConfig');
 
 // Verifikasi header Authorization: Bearer <token>
 const authMiddleware = (req, res, next) => {

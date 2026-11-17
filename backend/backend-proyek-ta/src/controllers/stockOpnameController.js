@@ -1,27 +1,41 @@
 const db = require('../config/database');
 const { logAudit } = require('../utils/auditLogger');
+const { HttpError, fail } = require('../utils/httpHelper');
+const { isNonNegInt, isPositiveInt } = require('../utils/validators');
 
 const VALID_STATUSES = ['pending', 'approved', 'rejected'];
 
-const fail = (res, status, message) => res.status(status).json({ success: false, message });
+const OPNAME_BASE_SELECT = `SELECT
+         so.id,
+         so.opname_code,
+         so.product_id,
+         p.code AS product_code,
+         p.name AS product_name,
+         p.category,
+         p.ring_size,
+         so.system_stock,
+         so.physical_stock,
+         (so.physical_stock - so.system_stock) AS difference,
+         so.notes,
+         so.status,
+         so.checked_by,
+         u1.name AS checked_by_name,
+         so.approved_by,
+         u2.name AS approved_by_name,
+         so.approval_notes,
+         so.approved_at,
+         so.created_at
+       FROM stock_opnames so
+       JOIN products p ON so.product_id = p.id
+       JOIN users u1 ON so.checked_by = u1.id
+       LEFT JOIN users u2 ON so.approved_by = u2.id`;
 
-class HttpError extends Error {
-  constructor(status, message) {
-    super(message);
-    this.status = status;
-  }
-}
-
-const isPositiveInt = (v) =>
-  v !== '' && v !== null && v !== undefined && Number.isInteger(Number(v)) && Number(v) > 0;
-
-const isNonNegInt = (v) =>
-  v !== '' &&
-  v !== null &&
-  v !== undefined &&
-  typeof v !== 'boolean' &&
-  Number.isInteger(Number(v)) &&
-  Number(v) >= 0;
+const formatOpnameRow = (row) => ({
+  ...row,
+  system_stock: Number(row.system_stock),
+  physical_stock: Number(row.physical_stock),
+  difference: Number(row.difference),
+});
 
 const handleError = (res, error, label) => {
   if (error instanceof HttpError) return fail(res, error.status, error.message);
@@ -374,42 +388,14 @@ const getOpnames = async (req, res) => {
     }
 
     const [rows] = await db.query(
-      `SELECT
-         so.id,
-         so.opname_code,
-         so.product_id,
-         p.code AS product_code,
-         p.name AS product_name,
-         p.category,
-         p.ring_size,
-         so.system_stock,
-         so.physical_stock,
-         (so.physical_stock - so.system_stock) AS difference,
-         so.notes,
-         so.status,
-         so.checked_by,
-         u1.name AS checked_by_name,
-         so.approved_by,
-         u2.name AS approved_by_name,
-         so.approval_notes,
-         so.approved_at,
-         so.created_at
-       FROM stock_opnames so
-       JOIN products p ON so.product_id = p.id
-       JOIN users u1 ON so.checked_by = u1.id
-       LEFT JOIN users u2 ON so.approved_by = u2.id
+      `${OPNAME_BASE_SELECT}
        ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
        ORDER BY so.id DESC
        LIMIT ?`,
       [...params, limit]
     );
 
-    const data = rows.map((row) => ({
-      ...row,
-      system_stock: Number(row.system_stock),
-      physical_stock: Number(row.physical_stock),
-      difference: Number(row.difference),
-    }));
+    const data = rows.map(formatOpnameRow);
 
     return res.status(200).json({
       success: true,
@@ -430,30 +416,7 @@ const getOpnameById = async (req, res) => {
     }
 
     const [rows] = await db.execute(
-      `SELECT
-         so.id,
-         so.opname_code,
-         so.product_id,
-         p.code AS product_code,
-         p.name AS product_name,
-         p.category,
-         p.ring_size,
-         so.system_stock,
-         so.physical_stock,
-         (so.physical_stock - so.system_stock) AS difference,
-         so.notes,
-         so.status,
-         so.checked_by,
-         u1.name AS checked_by_name,
-         so.approved_by,
-         u2.name AS approved_by_name,
-         so.approval_notes,
-         so.approved_at,
-         so.created_at
-       FROM stock_opnames so
-       JOIN products p ON so.product_id = p.id
-       JOIN users u1 ON so.checked_by = u1.id
-       LEFT JOIN users u2 ON so.approved_by = u2.id
+      `${OPNAME_BASE_SELECT}
        WHERE so.id = ?
        LIMIT 1`,
       [Number(id)]
@@ -463,16 +426,10 @@ const getOpnameById = async (req, res) => {
       return fail(res, 404, 'Data pengajuan stock opname tidak ditemukan.');
     }
 
-    const row = rows[0];
     return res.status(200).json({
       success: true,
       message: 'Detail pengajuan stock opname berhasil diambil.',
-      data: {
-        ...row,
-        system_stock: Number(row.system_stock),
-        physical_stock: Number(row.physical_stock),
-        difference: Number(row.difference),
-      },
+      data: formatOpnameRow(rows[0]),
     });
   } catch (error) {
     return handleError(res, error, 'getOpnameById');
