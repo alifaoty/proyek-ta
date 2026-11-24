@@ -27,10 +27,13 @@ const formatRupiahText = (n) =>
 
 const normalizeAuditDescription = (desc) => {
   if (!desc) return desc;
-  return String(desc).replace(
-    /Rp\s*(\d{4,})(?![.,\d])/g,
-    (_, digits) => 'Rp ' + Number(digits).toLocaleString('id-ID')
-  );
+  return String(desc)
+    .replace(
+      /Rp\s*(\d{4,})(?![.,\d])/g,
+      (_, digits) => 'Rp ' + Number(digits).toLocaleString('id-ID')
+    )
+    .replace(/Stock Opname/g, 'Stok Opname')
+    .replace(/stock opname/g, 'stok opname');
 };
 
 const toYMD = (d) => {
@@ -68,7 +71,7 @@ const resolveDateRange = (query = {}) => {
       : defaultEnd;
 
   if (!isValidDateStr(rawStart) || !isValidDateStr(rawEnd) || rawStart > rawEnd) {
-    return { error: 'Rentang tanggal filter tidak valid' };
+    return { error: 'Rentang tanggal filter tidak valid.' };
   }
 
   return { startDate: rawStart, endDate: rawEnd };
@@ -442,7 +445,7 @@ const exportReport = async (req, res) => {
         summaryHeader.font = { bold: true };
 
         const summaryItems = [
-          ['Total Omzet Penjualan (Settlement)', fin.summary.total_revenue],
+          ['Total Omzet Penjualan (Lunas)', fin.summary.total_revenue],
           ['Total Harga Pokok Penjualan (HPP)', fin.summary.total_cogs_hpp],
           ['Laba Kotor (Gross Profit)', fin.summary.gross_profit],
           ['Total Biaya Operasional', fin.summary.total_operational_expenses],
@@ -468,7 +471,7 @@ const exportReport = async (req, res) => {
         });
 
         sheet.addRow([]);
-        const salesTitle = sheet.addRow(['Daftar Transaksi Penjualan (Settlement)']);
+        const salesTitle = sheet.addRow(['Daftar Transaksi Penjualan (Lunas)']);
         salesTitle.font = { bold: true };
         const salesHeader = sheet.addRow([
           'No Faktur',
@@ -665,7 +668,7 @@ const exportReport = async (req, res) => {
       doc.moveDown(0.4);
 
       const rows = [
-        ['Total Omzet Penjualan (Settlement)', formatRupiahText(s.total_revenue)],
+        ['Total Omzet Penjualan (Lunas)', formatRupiahText(s.total_revenue)],
         ['Total Harga Pokok Penjualan (HPP)', formatRupiahText(s.total_cogs_hpp)],
         ['Laba Kotor (Gross Profit)', formatRupiahText(s.gross_profit)],
         [
@@ -724,7 +727,7 @@ const exportReport = async (req, res) => {
       doc
         .font('Helvetica-Bold')
         .fontSize(11)
-        .text('3. Transaksi Penjualan Terbaru (Settlement)', 40);
+        .text('3. Transaksi Penjualan Terbaru (Lunas)', 40);
       doc.moveDown(0.4);
 
       if (reportPayload.recent_sales.length === 0) {

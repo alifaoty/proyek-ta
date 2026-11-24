@@ -144,7 +144,7 @@ export default function StockOpnamePage() {
       };
       const res = await createOpname(payload);
       setToast(
-        `${res.data.message} (${res.data.data?.opname_code || 'Pending'})`
+        `${res.data.message} (${res.data.data?.opname_code || 'Menunggu Persetujuan'})`
       );
       setProductId('');
       setPhysicalStock('');
@@ -207,7 +207,7 @@ export default function StockOpnamePage() {
             Form Input Hasil Hitung Fisik Gudang
           </span>
           <span className="text-[11px] text-slate-400">
-            Status Awal: <b className="text-amber-600">PENDING APPROVAL</b>
+            Status Awal: <b className="text-amber-600">MENUNGGU PERSETUJUAN</b>
           </span>
         </div>
 
@@ -273,7 +273,7 @@ export default function StockOpnamePage() {
                         setDropdownOpen(false);
                       }
                     }}
-                    placeholder="Ketik SKU, nama ban/velg, spesifikasi, atau ukuran ring..."
+                    placeholder="Cari nama barang, kode SKU, atau ukuran ring..."
                     className={`w-full h-10 pl-9 pr-9 bg-white border rounded-lg text-xs text-slate-900 placeholder:text-slate-400 outline-none transition ${
                       errors.product_id
                         ? 'border-rose-500 focus:ring-2 focus:ring-rose-100'
@@ -503,7 +503,7 @@ export default function StockOpnamePage() {
             ) : (
               <>
                 <Send className="w-4 h-4" />
-                <span>Kirim Pengajuan Opname ke Owner</span>
+                <span>Kirim Pengajuan Stok Opname ke Owner</span>
               </>
             )}
           </button>

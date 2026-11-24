@@ -34,7 +34,7 @@ export default function InboundPage() {
   useEffect(() => {
     getProducts()
       .then((res) => setProducts(res.data.data))
-      .catch(() => setLoadError('Gagal memuat daftar produk'));
+      .catch(() => setLoadError('Gagal memuat daftar produk.'));
   }, []);
 
   useEffect(() => {
@@ -88,7 +88,7 @@ export default function InboundPage() {
       // Muat ulang agar harga beli terbaru tampil sebagai default
       getProducts().then((r) => setProducts(r.data.data)).catch(() => {});
     } catch (err) {
-      setApiError(err.response?.data?.message || 'Gagal membukukan penerimaan barang');
+      setApiError(err.response?.data?.message || 'Gagal membukukan penerimaan barang.');
     } finally {
       setSaving(false);
     }

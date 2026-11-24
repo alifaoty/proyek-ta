@@ -311,7 +311,7 @@ export default function POSPage() {
                 autoFocus
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Cari cepat nama ban/velg, kode SKU, atau ukuran ring (contoh: R15, BAN-001)..."
+                placeholder="Cari nama barang, kode SKU, atau ukuran ring..."
                 className="w-full h-10 pl-9 pr-8 bg-slate-50/70 border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition"
               />
               {search && (
@@ -337,7 +337,7 @@ export default function POSPage() {
             <div className="px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center justify-between">
               <span className="inline-flex items-center gap-2 font-medium">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
-                <span>Gagal memuat katalog produk POS</span>
+                <span>Gagal memuat katalog produk POS.</span>
               </span>
               <button
                 type="button"
@@ -564,7 +564,7 @@ export default function POSPage() {
                     }}
                     placeholder="0"
                     disabled={cartItems.length === 0}
-                    className="w-full h-8 pl-8 pr-2.5 bg-white border border-slate-300 rounded-lg text-right font-sans tabular-nums text-xs text-slate-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition disabled:bg-slate-100"
+                    className="w-full h-8 pl-8 pr-2.5 bg-white border border-slate-300 rounded-lg text-right font-sans tabular-nums text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition disabled:bg-slate-100"
                   />
                 </div>
               </div>

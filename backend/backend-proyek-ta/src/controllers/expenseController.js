@@ -12,10 +12,10 @@ const VALID_CATEGORIES = [
 ];
 
 const VALIDATION_ERROR_MSG =
-  'Nominal biaya harus lebih dari 0 dan kategori biaya wajib dipilih';
+  'Nominal biaya harus lebih dari Rp 0 dan kategori biaya operasional wajib dipilih.';
 
 const formatIdr = (val) =>
-  new Intl.NumberFormat('id-ID').format(Number(val || 0));
+  Math.round(Number(val || 0)).toLocaleString('id-ID');
 
 const isValidAmount = (val) =>
   val !== '' &&

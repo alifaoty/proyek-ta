@@ -40,10 +40,10 @@ const formatOpnameRow = (row) => ({
 const handleError = (res, error, label) => {
   if (error instanceof HttpError) return fail(res, error.status, error.message);
   if (error.code === 'ER_DUP_ENTRY') {
-    return fail(res, 409, 'Kode pengajuan stock opname sudah terdaftar, silakan ulangi.');
+    return fail(res, 409, 'Kode pengajuan stok opname sudah terdaftar, silakan ulangi.');
   }
   console.error(`Kesalahan ${label}:`, error);
-  return fail(res, 500, 'Terjadi kesalahan internal server');
+  return fail(res, 500, 'Terjadi kesalahan internal server.');
 };
 
 // Pastikan kolom ENUM mutation_type pada stock_mutation_logs mendukung nilai 'penyesuaian'
@@ -113,13 +113,13 @@ const createOpname = async (req, res) => {
       userId: Number(userId),
       action: 'SUBMIT_STOCK_OPNAME',
       endpoint: '/api/stock-opnames',
-      description: `Pengajuan stock opname ${opnameCode} untuk ${product.name} (Sistem: ${systemStock}, Fisik: ${physicalStock}, Selisih: ${difference})`,
+      description: `Pengajuan stok opname ${opnameCode} untuk ${product.name} (Sistem: ${systemStock}, Fisik: ${physicalStock}, Selisih: ${difference})`,
     });
 
     return res.status(201).json({
       success: true,
       message:
-        'Hasil perhitungan fisik stock opname berhasil diajukan dan menunggu persetujuan Owner.',
+        'Hasil perhitungan fisik stok opname berhasil diajukan dan menunggu persetujuan Owner.',
       data: {
         id: opnameId,
         opname_code: opnameCode,
@@ -142,7 +142,7 @@ const approveOpname = async (req, res) => {
 
   const { id } = req.params;
   if (!isPositiveInt(id)) {
-    return fail(res, 404, 'Data pengajuan stock opname tidak ditemukan.');
+    return fail(res, 404, 'Data pengajuan stok opname tidak ditemukan.');
   }
 
   const body = req.body || {};
@@ -163,12 +163,12 @@ const approveOpname = async (req, res) => {
       [Number(id)]
     );
     if (opnameRows.length === 0) {
-      throw new HttpError(404, 'Data pengajuan stock opname tidak ditemukan.');
+      throw new HttpError(404, 'Data pengajuan stok opname tidak ditemukan.');
     }
 
     const opname = opnameRows[0];
     if (opname.status !== 'pending') {
-      throw new HttpError(400, 'Pengajuan opname ini sudah diproses sebelumnya.');
+      throw new HttpError(400, 'Pengajuan stok opname ini sudah diproses sebelumnya.');
     }
 
     // 2. Kunci baris produk
@@ -178,7 +178,7 @@ const approveOpname = async (req, res) => {
       [productId]
     );
     if (prodRows.length === 0) {
-      throw new HttpError(404, 'Produk terkait pengajuan opname tidak ditemukan.');
+      throw new HttpError(404, 'Produk terkait pengajuan stok opname tidak ditemukan.');
     }
 
     // Pastikan seluruh nilai numerik & string terdefinisi (tidak ada undefined)
@@ -252,7 +252,7 @@ const approveOpname = async (req, res) => {
         userId: actorUserId,
         action: 'APPROVE_STOCK_OPNAME',
         endpoint: `/api/stock-opnames/${id}/approve`,
-        description: `Menyetujui penyesuaian stock opname ${referenceCode}: stok sistem ${systemStock} -> fisik ${physicalStock} (selisih ${difference})`,
+        description: `Menyetujui penyesuaian stok opname ${referenceCode}: stok sistem ${systemStock} -> fisik ${physicalStock} (selisih ${difference})`,
       },
       conn
     );
@@ -286,7 +286,7 @@ const rejectOpname = async (req, res) => {
 
   const { id } = req.params;
   if (!isPositiveInt(id)) {
-    return fail(res, 404, 'Data pengajuan stock opname tidak ditemukan.');
+    return fail(res, 404, 'Data pengajuan stok opname tidak ditemukan.');
   }
 
   const body = req.body || {};
@@ -306,12 +306,12 @@ const rejectOpname = async (req, res) => {
       [Number(id)]
     );
     if (opnameRows.length === 0) {
-      throw new HttpError(404, 'Data pengajuan stock opname tidak ditemukan.');
+      throw new HttpError(404, 'Data pengajuan stok opname tidak ditemukan.');
     }
 
     const opname = opnameRows[0];
     if (opname.status !== 'pending') {
-      throw new HttpError(400, 'Pengajuan opname ini sudah diproses sebelumnya.');
+      throw new HttpError(400, 'Pengajuan stok opname ini sudah diproses sebelumnya.');
     }
 
     const actorUserId = Number(userId);
@@ -329,7 +329,7 @@ const rejectOpname = async (req, res) => {
         userId: actorUserId,
         action: 'REJECT_STOCK_OPNAME',
         endpoint: `/api/stock-opnames/${id}/reject`,
-        description: `Menolak pengajuan stock opname ${opname.opname_code}. Alasan: ${approvalNotes}`,
+        description: `Menolak pengajuan stok opname ${opname.opname_code}. Alasan: ${approvalNotes}`,
       },
       conn
     );
@@ -399,7 +399,7 @@ const getOpnames = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Daftar data stock opname berhasil diambil.',
+      message: 'Daftar data stok opname berhasil diambil.',
       data,
     });
   } catch (error) {
@@ -407,12 +407,12 @@ const getOpnames = async (req, res) => {
   }
 };
 
-// GET /api/stock-opnames/:id — Detail Pengajuan Stock Opname (Role: Admin & Owner)
+// GET /api/stock-opnames/:id — Detail Pengajuan Stok Opname (Role: Admin & Owner)
 const getOpnameById = async (req, res) => {
   try {
     const { id } = req.params;
     if (!isPositiveInt(id)) {
-      return fail(res, 404, 'Data pengajuan stock opname tidak ditemukan.');
+      return fail(res, 404, 'Data pengajuan stok opname tidak ditemukan.');
     }
 
     const [rows] = await db.execute(
@@ -423,12 +423,12 @@ const getOpnameById = async (req, res) => {
     );
 
     if (rows.length === 0) {
-      return fail(res, 404, 'Data pengajuan stock opname tidak ditemukan.');
+      return fail(res, 404, 'Data pengajuan stok opname tidak ditemukan.');
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Detail pengajuan stock opname berhasil diambil.',
+      message: 'Detail pengajuan stok opname berhasil diambil.',
       data: formatOpnameRow(rows[0]),
     });
   } catch (error) {

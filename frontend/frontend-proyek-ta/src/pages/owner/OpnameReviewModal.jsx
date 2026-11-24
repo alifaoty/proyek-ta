@@ -48,7 +48,7 @@ export default function OpnameReviewModal({ mode, item, onClose, onSuccess }) {
     } catch (err) {
       setError(
         err.response?.data?.message ||
-          'Gagal memproses keputusan persetujuan opname.'
+          'Gagal memproses keputusan persetujuan stok opname.'
       );
       setSubmitting(false);
     }
@@ -82,8 +82,8 @@ export default function OpnameReviewModal({ mode, item, onClose, onSuccess }) {
             )}
             <h2 className="text-sm font-bold text-slate-900">
               {isApprove
-                ? 'Konfirmasi Setujui Penyesuaian Stok'
-                : 'Konfirmasi Tolak Pengajuan Opname'}
+                ? 'Konfirmasi Setujui Stok Opname'
+                : 'Konfirmasi Tolak Stok Opname'}
             </h2>
           </div>
           <button
@@ -174,7 +174,7 @@ export default function OpnameReviewModal({ mode, item, onClose, onSuccess }) {
               </span>
             ) : (
               <span>
-                Pengajuan akan ditandai <b>Ditolak (Rejected)</b>. Saldo stok
+                Pengajuan akan ditandai <b>Ditolak</b>. Saldo stok
                 sistem tetap utuh dan tidak mengalami perubahan.
               </span>
             )}

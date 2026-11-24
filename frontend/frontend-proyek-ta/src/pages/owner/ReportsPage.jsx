@@ -73,10 +73,13 @@ const formatReadableDate = (dateStr) => {
 
 const formatAuditDescription = (desc) => {
   if (!desc) return '—';
-  return String(desc).replace(
-    /Rp\s*(\d{4,})(?![.,\d])/g,
-    (_, digits) => 'Rp ' + Number(digits).toLocaleString('id-ID')
-  );
+  return String(desc)
+    .replace(
+      /Rp\s*(\d{4,})(?![.,\d])/g,
+      (_, digits) => 'Rp ' + Number(digits).toLocaleString('id-ID')
+    )
+    .replace(/Stock Opname/g, 'Stok Opname')
+    .replace(/stock opname/g, 'stok opname');
 };
 
 function AuditActionBadge({ action }) {
@@ -199,7 +202,7 @@ export default function ReportsPage() {
   const handleApplyFilter = (e) => {
     e.preventDefault();
     if (!startInput || !endInput || startInput > endInput) {
-      setDateError('Rentang tanggal filter tidak valid');
+      setDateError('Rentang tanggal filter tidak valid.');
       return;
     }
     setDateError('');
@@ -217,7 +220,7 @@ export default function ReportsPage() {
 
   const handleExport = async (format) => {
     if (!startInput || !endInput || startInput > endInput) {
-      setDateError('Rentang tanggal filter tidak valid');
+      setDateError('Rentang tanggal filter tidak valid.');
       return;
     }
     setDateError('');
@@ -498,7 +501,7 @@ export default function ReportsPage() {
                 <div className="p-5 space-y-3 text-xs font-sans tabular-nums">
                   <div className="flex items-center justify-between py-1.5">
                     <span className="font-medium text-slate-700">
-                      Pendapatan Penjualan (Settlement)
+                      Pendapatan Penjualan (Transaksi Lunas)
                     </span>
                     <span className="font-bold text-slate-900 text-right">
                       {rupiah(finSummary.total_revenue)}
@@ -575,7 +578,7 @@ export default function ReportsPage() {
               <div className="px-5 py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
                 <div>
                   <h2 className="text-sm font-bold text-slate-900">
-                    Rincian Transaksi Penjualan (Settlement)
+                    Rincian Transaksi Penjualan (Lunas)
                   </h2>
                 </div>
                 <span className="text-[11px] font-sans tabular-nums text-slate-500">
@@ -610,7 +613,7 @@ export default function ReportsPage() {
                           colSpan={4}
                           className="py-12 text-center text-slate-400"
                         >
-                          Belum ada transaksi penjualan berstatus settlement
+                          Belum ada transaksi penjualan berstatus lunas
                           pada periode ini.
                         </td>
                       </tr>
@@ -635,7 +638,9 @@ export default function ReportsPage() {
                           </td>
                           <td className="py-2.5 px-4 text-center whitespace-nowrap">
                             <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold uppercase bg-slate-100 text-slate-700 border border-slate-200">
-                              {sale.payment_method}
+                              {String(sale.payment_method || '').toLowerCase() === 'cash'
+                                ? 'Tunai'
+                                : sale.payment_method}
                             </span>
                           </td>
                           <td className="py-2.5 px-4 text-right font-sans tabular-nums font-bold text-slate-900 whitespace-nowrap">

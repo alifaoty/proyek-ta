@@ -6,6 +6,9 @@ const { isNonNegNumber, isPositiveInt } = require('../utils/validators');
 const PAYMENT_METHODS = ['cash', 'qris', 'va'];
 const PAYMENT_STATUSES = ['pending', 'settlement', 'expire', 'cancel'];
 
+const formatIdr = (val) =>
+  Math.round(Number(val || 0)).toLocaleString('id-ID');
+
 /**
  * Validasi daftar item keranjang belanja POS.
  */
@@ -144,7 +147,7 @@ const createCashTransaction = async (req, res) => {
         userId: cashierId,
         action: 'POS_CASH_TRANSACTION',
         endpoint: 'POST /api/transactions',
-        description: `Transaksi penjualan tunai ${invoiceCode} sebesar Rp ${grandTotal.toLocaleString('id-ID')}`,
+        description: `Transaksi penjualan tunai ${invoiceCode} sebesar Rp ${formatIdr(grandTotal)}`,
       },
       conn
     );
@@ -272,7 +275,7 @@ const createQrisTransaction = async (req, res) => {
         userId: cashierId,
         action: 'POS_QRIS_TRANSACTION',
         endpoint: 'POST /api/transactions/charge-qris',
-        description: `Tagihan QRIS diterbitkan ${invoiceCode} sebesar Rp ${grandTotal.toLocaleString('id-ID')}`,
+        description: `Tagihan QRIS diterbitkan ${invoiceCode} sebesar Rp ${formatIdr(grandTotal)}`,
       },
       conn
     );
