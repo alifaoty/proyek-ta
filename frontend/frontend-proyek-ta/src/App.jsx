@@ -10,6 +10,7 @@ import InboundPage from './pages/inventory/InboundPage';
 import OutboundPage from './pages/inventory/OutboundPage';
 import StockOpnamePage from './pages/inventory/StockOpnamePage';
 import StockApprovalPage from './pages/owner/StockApprovalPage';
+import ExpensesPage from './pages/owner/ExpensesPage';
 import POSPage from './pages/pos/POSPage';
 
 // Placeholder sementara hingga modul terkait diimplementasikan
@@ -53,7 +54,8 @@ function App() {
                 <Route path="/dashboard" element={<Placeholder title="Dashboard" />} />
                 <Route path="/owner/stock-approvals" element={<StockApprovalPage />} />
                 <Route path="/approval-opname" element={<Navigate to="/owner/stock-approvals" replace />} />
-                <Route path="/expenses" element={<Placeholder title="Biaya Operasional" />} />
+                <Route path="/expenses" element={<ExpensesPage />} />
+                <Route path="/owner/expenses" element={<ExpensesPage />} />
                 <Route path="/reports/financial" element={<Placeholder title="Laporan Keuangan" />} />
               </Route>
             </Route>
