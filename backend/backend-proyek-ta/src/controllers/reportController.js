@@ -25,6 +25,14 @@ const EXPENSE_CATEGORY_LABELS = {
 const formatRupiahText = (n) =>
   'Rp ' + Math.round(Number(n || 0)).toLocaleString('id-ID');
 
+const normalizeAuditDescription = (desc) => {
+  if (!desc) return desc;
+  return String(desc).replace(
+    /Rp\s*(\d{4,})(?![.,\d])/g,
+    (_, digits) => 'Rp ' + Number(digits).toLocaleString('id-ID')
+  );
+};
+
 const toYMD = (d) => {
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -321,10 +329,15 @@ const buildAuditTrailsData = async (query = {}, startDate, endDate) => {
     [...params, limit]
   );
 
+  const formattedLogs = rows.map((row) => ({
+    ...row,
+    description: normalizeAuditDescription(row.description),
+  }));
+
   return {
     period: { start_date: startDate, end_date: endDate },
-    total_records: rows.length,
-    logs: rows,
+    total_records: formattedLogs.length,
+    logs: formattedLogs,
   };
 };
 

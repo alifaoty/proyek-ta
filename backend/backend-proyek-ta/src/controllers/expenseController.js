@@ -14,6 +14,9 @@ const VALID_CATEGORIES = [
 const VALIDATION_ERROR_MSG =
   'Nominal biaya harus lebih dari 0 dan kategori biaya wajib dipilih';
 
+const formatIdr = (val) =>
+  new Intl.NumberFormat('id-ID').format(Number(val || 0));
+
 const isValidAmount = (val) =>
   val !== '' &&
   val !== null &&
@@ -153,7 +156,7 @@ const createExpense = async (req, res) => {
       userId: Number(userId),
       action: 'CREATE_EXPENSE',
       endpoint: 'POST /api/expenses',
-      description: `Mencatat biaya operasional ${expenseCode} (${category}) sebesar Rp ${numericAmount}`,
+      description: `Mencatat biaya operasional ${expenseCode} (${category}) sebesar Rp ${formatIdr(numericAmount)}`,
     });
 
     return res.status(201).json({
@@ -322,7 +325,7 @@ const updateExpense = async (req, res) => {
       userId: Number(userId),
       action: 'UPDATE_EXPENSE',
       endpoint: `PUT /api/expenses/${id}`,
-      description: `Memperbarui biaya operasional ${existing[0].expense_code} (${category}) menjadi Rp ${numericAmount}`,
+      description: `Memperbarui biaya operasional ${existing[0].expense_code} (${category}) menjadi Rp ${formatIdr(numericAmount)}`,
     });
 
     return res.status(200).json({
@@ -371,7 +374,7 @@ const deleteExpense = async (req, res) => {
       userId: Number(userId),
       action: 'DELETE_EXPENSE',
       endpoint: `DELETE /api/expenses/${id}`,
-      description: `Menghapus biaya operasional ${expense_code} sebesar Rp ${Number(amount)}`,
+      description: `Menghapus biaya operasional ${expense_code} sebesar Rp ${formatIdr(amount)}`,
     });
 
     return res.status(200).json({

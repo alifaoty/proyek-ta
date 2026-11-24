@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -20,7 +20,6 @@ import {
   getExpenses,
   updateExpense,
 } from '../../api/expenseApi';
-import SegmentedTabs from '../../components/common/SegmentedTabs';
 import useAuth from '../../hooks/useAuth';
 import {
   formatThousandDigits,
@@ -60,11 +59,6 @@ const EXPENSE_CATEGORIES = [
 const CATEGORY_MAP = Object.fromEntries(
   EXPENSE_CATEGORIES.map((c) => [c.key, c])
 );
-
-const EXPENSE_FILTER_TABS = [
-  { key: '', label: 'Semua' },
-  ...EXPENSE_CATEGORIES.map((c) => ({ key: c.key, label: c.label })),
-];
 
 const formatExpenseDate = (dateStr) => {
   if (!dateStr) return '—';
@@ -243,8 +237,8 @@ function ExpenseFormModal({ expense, onClose, onSaved }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {/* Input Nominal dengan Prefix Rp & Pemisah Ribuan */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-                Nominal Biaya (Rp) <span className="text-rose-600">*</span>
+              <label className="block text-xs font-semibold tracking-wider text-slate-600 mb-1.5">
+                NOMINAL BIAYA (Rp) <span className="text-rose-600">*</span>
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 pointer-events-none">
@@ -259,8 +253,8 @@ function ExpenseFormModal({ expense, onClose, onSaved }) {
                     setForm((p) => ({ ...p, amount: digits }));
                     setErrors((p) => ({ ...p, amount: undefined }));
                   }}
-                  placeholder="250.000"
-                  className={`${inputCls(errors.amount)} pl-9 font-sans tabular-nums font-semibold`}
+                  placeholder="0"
+                  className={`${inputCls(errors.amount)} pl-9 font-sans tabular-nums font-semibold placeholder:text-slate-400 placeholder:font-normal`}
                 />
               </div>
               {errors.amount && (
@@ -477,6 +471,13 @@ export default function ExpensesPage() {
     return () => clearTimeout(t);
   }, [toast]);
 
+  const topCategoryAmount = useMemo(() => {
+    if (!summary.top_category) return 0;
+    return expenses
+      .filter((item) => item.category === summary.top_category)
+      .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  }, [expenses, summary.top_category]);
+
   if (user && user.role !== 'owner') {
     return <Navigate to="/unauthorized" replace />;
   }
@@ -522,7 +523,7 @@ export default function ExpensesPage() {
             className="h-10 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-semibold shadow-xs transition inline-flex items-center gap-2 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>+ Catat Pengeluaran Baru</span>
+            <span>Catat Pengeluaran Baru</span>
           </button>
         </div>
       </div>
@@ -574,11 +575,13 @@ export default function ExpensesPage() {
             <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500">
               Kategori Pengeluaran Terbesar
             </span>
-            <div className="text-base font-bold text-slate-900 mt-1 truncate">
+            <div className="text-base font-bold leading-snug line-clamp-2 text-slate-900 mt-1">
               {topCategoryLabel}
             </div>
-            <span className="block text-[11px] text-slate-400 mt-0.5">
-              Pos beban dengan nominal tertinggi
+            <span className="block text-[11px] font-sans tabular-nums text-slate-500 mt-0.5">
+              {summary.top_category
+                ? `Total ${rupiah(topCategoryAmount)}`
+                : 'Pos beban dengan nominal tertinggi'}
             </span>
           </div>
           <div className="w-9 h-9 rounded-lg bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0">
@@ -587,15 +590,32 @@ export default function ExpensesPage() {
         </div>
       </div>
 
-      {/* Baris Filter & Kontrol */}
-      <div className="bg-white border border-slate-200/80 rounded-xl shadow-sm p-3.5 space-y-3 text-left">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-          {/* Segmented Tabs Kategori */}
-          <SegmentedTabs
-            tabs={EXPENSE_FILTER_TABS}
-            value={categoryFilter}
-            onChange={setCategoryFilter}
-          />
+      {/* Baris Filter & Kontrol Satu Baris */}
+      <div className="bg-white border border-slate-200/80 rounded-xl shadow-sm p-3.5 text-left">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {/* Dropdown Filter Kategori Beban */}
+          <div className="flex items-center gap-2 flex-1 sm:flex-none">
+            <label
+              htmlFor="expense-category-filter"
+              className="text-xs font-semibold text-slate-600 whitespace-nowrap"
+            >
+              Kategori:
+            </label>
+            <select
+              id="expense-category-filter"
+              aria-label="Filter Kategori Beban"
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="h-9 px-3 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-700 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition flex-1 sm:w-56"
+            >
+              <option value="">Semua Kategori Beban</option>
+              {EXPENSE_CATEGORIES.map((c) => (
+                <option key={c.key} value={c.key}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {/* Filter Rentang Tanggal & Reset */}
           <div className="flex flex-wrap items-center gap-2">
@@ -608,7 +628,7 @@ export default function ExpensesPage() {
               aria-label="Tanggal Mulai"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="h-8 px-2.5 bg-white border border-slate-300 rounded-lg text-xs font-sans tabular-nums text-slate-700 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition"
+              className="h-9 px-2.5 bg-white border border-slate-300 rounded-lg text-xs font-sans tabular-nums text-slate-700 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition"
             />
             <span className="text-xs text-slate-400">s.d.</span>
             <input
@@ -616,16 +636,16 @@ export default function ExpensesPage() {
               aria-label="Tanggal Akhir"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="h-8 px-2.5 bg-white border border-slate-300 rounded-lg text-xs font-sans tabular-nums text-slate-700 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition"
+              className="h-9 px-2.5 bg-white border border-slate-300 rounded-lg text-xs font-sans tabular-nums text-slate-700 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition"
             />
             {hasActiveFilter && (
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-semibold inline-flex items-center gap-1 transition cursor-pointer"
+                className="h-9 px-3 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-semibold inline-flex items-center gap-1 transition cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3" />
-                <span>Reset Filter</span>
+                <span>Reset</span>
               </button>
             )}
           </div>
@@ -668,7 +688,7 @@ export default function ExpensesPage() {
                       Belum Ada Catatan Biaya Operasional
                     </div>
                     <div className="text-[11px] text-slate-400 mt-0.5">
-                      Klik tombol &ldquo;+ Catat Pengeluaran Baru&rdquo; untuk
+                      Klik tombol &ldquo;Catat Pengeluaran Baru&rdquo; untuk
                       mencatat pengeluaran toko.
                     </div>
                   </td>
