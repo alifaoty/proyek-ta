@@ -1,8 +1,9 @@
 const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
 const db = require('../config/database');
-const { fail } = require('../utils/httpHelper');
-const { isPositiveInt } = require('../utils/validators');
+const { formatRupiahText, normalizeAuditDescription } = require('../utils/formatters');
+const { fail, handleControllerError } = require('../utils/httpHelper');
+const { isPositiveInt, resolveDateRange } = require('../utils/validators');
 
 const VALID_EXPORT_TYPES = ['financial', 'stock', 'audit'];
 const VALID_EXPORT_FORMATS = ['pdf', 'xlsx'];
@@ -20,61 +21,6 @@ const EXPENSE_CATEGORY_LABELS = {
   konsumsi_toko: 'Konsumsi Toko',
   perawatan_alat: 'Perawatan Alat',
   lain_lain: 'Lain-lain',
-};
-
-const formatRupiahText = (n) =>
-  'Rp ' + Math.round(Number(n || 0)).toLocaleString('id-ID');
-
-const normalizeAuditDescription = (desc) => {
-  if (!desc) return desc;
-  return String(desc)
-    .replace(
-      /Rp\s*(\d{4,})(?![.,\d])/g,
-      (_, digits) => 'Rp ' + Number(digits).toLocaleString('id-ID')
-    )
-    .replace(/Stock Opname/g, 'Stok Opname')
-    .replace(/stock opname/g, 'stok opname');
-};
-
-const toYMD = (d) => {
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-const isValidDateStr = (val) => {
-  if (typeof val !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(val.trim())) {
-    return false;
-  }
-  const d = new Date(`${val.trim()}T00:00:00Z`);
-  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === val.trim();
-};
-
-/**
- * Validasi & normalisasi rentang tanggal start_date dan end_date.
- * Default: tanggal 1 bulan berjalan s.d. hari ini.
- * Jika start_date > end_date atau format tidak valid -> kembalikan { error }.
- */
-const resolveDateRange = (query = {}) => {
-  const now = new Date();
-  const defaultStart = toYMD(new Date(now.getFullYear(), now.getMonth(), 1));
-  const defaultEnd = toYMD(now);
-
-  const rawStart =
-    query.start_date !== undefined && String(query.start_date).trim() !== ''
-      ? String(query.start_date).trim()
-      : defaultStart;
-  const rawEnd =
-    query.end_date !== undefined && String(query.end_date).trim() !== ''
-      ? String(query.end_date).trim()
-      : defaultEnd;
-
-  if (!isValidDateStr(rawStart) || !isValidDateStr(rawEnd) || rawStart > rawEnd) {
-    return { error: 'Rentang tanggal filter tidak valid.' };
-  }
-
-  return { startDate: rawStart, endDate: rawEnd };
 };
 
 // Deteksi kolom tanggal transaksi pada tabel transactions (transaction_date atau created_at)
@@ -358,8 +304,7 @@ const getFinancialReport = async (req, res) => {
       data,
     });
   } catch (err) {
-    console.error('Kesalahan getFinancialReport:', err);
-    return fail(res, 500, 'Terjadi kesalahan internal server');
+    return handleControllerError(res, err, 'getFinancialReport');
   }
 };
 
@@ -378,8 +323,7 @@ const getStockMutationsReport = async (req, res) => {
       data: result,
     });
   } catch (err) {
-    console.error('Kesalahan getStockMutationsReport:', err);
-    return fail(res, 500, 'Terjadi kesalahan internal server');
+    return handleControllerError(res, err, 'getStockMutationsReport');
   }
 };
 
@@ -398,8 +342,7 @@ const getAuditTrailsReport = async (req, res) => {
       data: result,
     });
   } catch (err) {
-    console.error('Kesalahan getAuditTrailsReport:', err);
-    return fail(res, 500, 'Terjadi kesalahan internal server');
+    return handleControllerError(res, err, 'getAuditTrailsReport');
   }
 };
 
@@ -810,10 +753,12 @@ const exportReport = async (req, res) => {
 
     doc.end();
   } catch (err) {
-    console.error('Kesalahan exportReport:', err);
     if (!res.headersSent) {
-      return fail(res, 500, 'Terjadi kesalahan internal server saat mengekspor laporan');
+      return handleControllerError(res, err, 'exportReport', {
+        defaultMessage: 'Terjadi kesalahan internal server saat mengekspor laporan',
+      });
     }
+    console.error('Kesalahan exportReport:', err);
   }
 };
 

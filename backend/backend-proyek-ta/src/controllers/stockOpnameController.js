@@ -1,6 +1,7 @@
 const db = require('../config/database');
 const { logAudit } = require('../utils/auditLogger');
-const { HttpError, fail } = require('../utils/httpHelper');
+const { generateOpnameCode } = require('../utils/codeGenerator');
+const { HttpError, fail, getActorId, handleControllerError } = require('../utils/httpHelper');
 const { isNonNegInt, isPositiveInt } = require('../utils/validators');
 
 const VALID_STATUSES = ['pending', 'approved', 'rejected'];
@@ -37,36 +38,16 @@ const formatOpnameRow = (row) => ({
   difference: Number(row.difference),
 });
 
-const handleError = (res, error, label) => {
-  if (error instanceof HttpError) return fail(res, error.status, error.message);
-  if (error.code === 'ER_DUP_ENTRY') {
-    return fail(res, 409, 'Kode pengajuan stok opname sudah terdaftar, silakan ulangi.');
-  }
-  console.error(`Kesalahan ${label}:`, error);
-  return fail(res, 500, 'Terjadi kesalahan internal server.');
-};
-
-// Pastikan kolom ENUM mutation_type pada stock_mutation_logs mendukung nilai 'penyesuaian'
-(async () => {
-  try {
-    const [cols] = await db.query("SHOW COLUMNS FROM stock_mutation_logs LIKE 'mutation_type'");
-    if (cols.length > 0) {
-      const colType = String(cols[0].Type || cols[0].type || '');
-      if (colType.toLowerCase().startsWith('enum(') && !colType.includes("'penyesuaian'")) {
-        await db.query(
-          "ALTER TABLE stock_mutation_logs MODIFY COLUMN mutation_type ENUM('masuk', 'keluar', 'penjualan', 'keluar_non_penjualan', 'adjustment_opname', 'penyesuaian') NOT NULL"
-        );
-      }
-    }
-  } catch (err) {
-    console.warn('Info pemeriksaan skema stock_mutation_logs:', err.message);
-  }
-})();
+const handleError = (res, error, label) =>
+  handleControllerError(res, error, label, {
+    dupMessage: 'Kode pengajuan stok opname sudah terdaftar, silakan ulangi.',
+    defaultMessage: 'Terjadi kesalahan internal server.',
+  });
 
 // POST /api/stock-opnames — Pencatatan Hitung Fisik Opname (Role: Admin & Owner)
 const createOpname = async (req, res) => {
   try {
-    const userId = req.user?.id || req.user?.userId;
+    const userId = getActorId(req);
     if (!userId) return fail(res, 401, 'Identitas pengguna tidak terdeteksi.');
 
     const body = req.body || {};
@@ -98,7 +79,7 @@ const createOpname = async (req, res) => {
     const product = prodRows[0];
     const systemStock = Number(product.current_stock);
     const difference = Number(physicalStock) - Number(systemStock);
-    const opnameCode = `OPN-${Date.now().toString().slice(-8)}`;
+    const opnameCode = generateOpnameCode();
 
     const [insertResult] = await db.execute(
       `INSERT INTO stock_opnames
@@ -137,7 +118,7 @@ const createOpname = async (req, res) => {
 
 // PATCH /api/stock-opnames/:id/approve — Persetujuan Adjustment Opname (Role: Owner Eksklusif)
 const approveOpname = async (req, res) => {
-  const userId = req.user?.id || req.user?.userId;
+  const userId = getActorId(req);
   if (!userId) return fail(res, 401, 'Identitas pengguna tidak terdeteksi.');
 
   const { id } = req.params;
@@ -281,7 +262,7 @@ const approveOpname = async (req, res) => {
 
 // PATCH /api/stock-opnames/:id/reject — Penolakan Adjustment Opname (Role: Owner Eksklusif)
 const rejectOpname = async (req, res) => {
-  const userId = req.user?.id || req.user?.userId;
+  const userId = getActorId(req);
   if (!userId) return fail(res, 401, 'Identitas pengguna tidak terdeteksi.');
 
   const { id } = req.params;

@@ -1,13 +1,12 @@
 const db = require('../config/database');
 const { logAudit } = require('../utils/auditLogger');
-const { HttpError, fail } = require('../utils/httpHelper');
+const { generateInvoiceCode } = require('../utils/codeGenerator');
+const { formatIdr } = require('../utils/formatters');
+const { HttpError, fail, getActorId, handleControllerError } = require('../utils/httpHelper');
 const { isNonNegNumber, isPositiveInt } = require('../utils/validators');
 
 const PAYMENT_METHODS = ['cash', 'qris', 'va'];
 const PAYMENT_STATUSES = ['pending', 'settlement', 'expire', 'cancel'];
-
-const formatIdr = (val) =>
-  Math.round(Number(val || 0)).toLocaleString('id-ID');
 
 /**
  * Validasi daftar item keranjang belanja POS.
@@ -30,21 +29,14 @@ const validateItems = (items) => {
   return null;
 };
 
-/**
- * Buat kode invoice unik: INV-XXXXXXXX (8 digit terakhir timestamp)
- */
-const generateInvoiceCode = () => `INV-${Date.now().toString().slice(-8)}`;
-
-const handleError = (res, error, label) => {
-  if (error instanceof HttpError) return fail(res, error.status, error.message);
-  if (error.code === 'ER_DUP_ENTRY') return fail(res, 409, 'Kode invoice sudah terdaftar, silakan ulangi.');
-  console.error(`Kesalahan ${label}:`, error);
-  return fail(res, 500, 'Terjadi kesalahan internal server');
-};
+const handleError = (res, error, label) =>
+  handleControllerError(res, error, label, {
+    dupMessage: 'Kode invoice sudah terdaftar, silakan ulangi.',
+  });
 
 // POST /api/transactions (Pembayaran Tunai / Cash)
 const createCashTransaction = async (req, res) => {
-  const cashierId = req.user?.id || req.user?.userId;
+  const cashierId = getActorId(req);
   if (!cashierId) return fail(res, 401, 'Identitas kasir tidak terdeteksi.');
 
   const body = req.body || {};
@@ -181,7 +173,7 @@ const createCashTransaction = async (req, res) => {
 
 // POST /api/transactions/charge-qris (Tagihan Pembayaran QRIS)
 const createQrisTransaction = async (req, res) => {
-  const cashierId = req.user?.id || req.user?.userId;
+  const cashierId = getActorId(req);
   if (!cashierId) return fail(res, 401, 'Identitas kasir tidak terdeteksi.');
 
   const body = req.body || {};
