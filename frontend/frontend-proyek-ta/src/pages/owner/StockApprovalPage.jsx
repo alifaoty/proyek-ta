@@ -34,7 +34,7 @@ export default function StockApprovalPage() {
     } catch (err) {
       setApiError(
         err.response?.data?.message ||
-          'Gagal memuat daftar pengajuan opname yang menunggu persetujuan.'
+          'Gagal memuat daftar pengajuan stok opname yang menunggu persetujuan.'
       );
     } finally {
       setLoading(false);
@@ -76,7 +76,7 @@ export default function StockApprovalPage() {
                 Persetujuan Stok Opname
               </h1>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-sans tabular-nums font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                {pendingList.length} Pending
+                {pendingList.length} Menunggu
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -108,10 +108,10 @@ export default function StockApprovalPage() {
         <div className="px-5 py-3 bg-slate-900 text-white flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-semibold">
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>Antrean Otorisasi Penyesuaian Stok (Owner Only)</span>
+            <span>Antrean Otorisasi Penyesuaian Stok (Khusus Owner)</span>
           </div>
           <span className="font-sans tabular-nums text-[11px] text-slate-300">
-            Menampilkan: {pendingList.length} dokumen pending
+            Menampilkan: {pendingList.length} dokumen menunggu persetujuan
           </span>
         </div>
 
@@ -133,7 +133,7 @@ export default function StockApprovalPage() {
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-400">
                     <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1.5 text-blue-600" />
-                    <span>Memuat daftar pengajuan pending...</span>
+                    <span>Memuat daftar pengajuan stok opname...</span>
                   </td>
                 </tr>
               ) : pendingList.length === 0 ? (
@@ -143,7 +143,7 @@ export default function StockApprovalPage() {
                       <CheckCircle2 className="w-5 h-5" />
                     </div>
                     <div className="text-xs font-bold text-slate-700">
-                      Seluruh Pengajuan Opname Telah Diproses
+                      Seluruh Pengajuan Stok Opname Telah Diproses
                     </div>
                     <div className="text-[11px] text-slate-400 mt-0.5">
                       Tidak ada antrean penyesuaian stok yang menunggu

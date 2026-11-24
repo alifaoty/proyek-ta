@@ -37,7 +37,7 @@ export default function OutboundPage() {
   const loadProducts = useCallback(() => {
     getProducts()
       .then((res) => setProducts(res.data.data || []))
-      .catch(() => setLoadError('Gagal memuat daftar produk'));
+      .catch(() => setLoadError('Gagal memuat daftar produk.'));
   }, []);
 
   const loadMutations = useCallback(async () => {
@@ -49,7 +49,7 @@ export default function OutboundPage() {
       const res = await getMutations(params);
       setMutations(res.data.data || []);
     } catch {
-      setLoadError('Gagal memuat riwayat kartu stok mutasi persediaan');
+      setLoadError('Gagal memuat riwayat kartu stok mutasi persediaan.');
     } finally {
       setLoadingMutations(false);
     }
@@ -106,7 +106,7 @@ export default function OutboundPage() {
       loadMutations();
     } catch (err) {
       setApiError(
-        err.response?.data?.message || 'Gagal menyimpan mutasi keluar'
+        err.response?.data?.message || 'Gagal menyimpan mutasi keluar.'
       );
       loadProducts();
     } finally {
@@ -220,7 +220,7 @@ export default function OutboundPage() {
               />
               {overStock && (
                 <div className="text-xs text-red-600 font-medium mt-1 font-sans tabular-nums">
-                  Jumlah melebihi stok fisik ({product.current_stock} unit).
+                  Kuantitas keluar melebihi sisa stok fisik ({product.current_stock} unit).
                 </div>
               )}
               {errors.quantity && !overStock && (

@@ -40,7 +40,7 @@ export const MUTATION_FILTER_TABS = [
 
 export const OPNAME_STATUS_TABS = [
   { key: '', label: 'Semua Status' },
-  { key: 'pending', label: 'Pending' },
-  { key: 'approved', label: 'Approved' },
-  { key: 'rejected', label: 'Rejected' },
+  { key: 'pending', label: 'Menunggu' },
+  { key: 'approved', label: 'Disetujui' },
+  { key: 'rejected', label: 'Ditolak' },
 ];

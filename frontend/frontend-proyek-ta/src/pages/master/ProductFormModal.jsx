@@ -70,9 +70,9 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
     try {
       if (isEdit) await updateProduct(product.id, payload);
       else await createProduct(payload);
-      onSaved(isEdit ? 'Produk berhasil diperbarui' : 'Produk berhasil ditambahkan');
+      onSaved(isEdit ? 'Produk berhasil diperbarui.' : 'Produk berhasil ditambahkan.');
     } catch (err) {
-      setApiError(errMsg(err, 'Gagal menyimpan produk'));
+      setApiError(errMsg(err, 'Gagal menyimpan produk.'));
       setSaving(false);
     }
   };
@@ -173,12 +173,12 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
                   Rp
                 </span>
                 <input
-                  className={`${baseInputCls(errors.purchase_price)} pl-9 font-sans tabular-nums`}
+                  className={`${baseInputCls(errors.purchase_price)} pl-9 font-sans tabular-nums placeholder:text-slate-400`}
                   type="text"
                   inputMode="numeric"
                   value={formatThousandDigits(form.purchase_price)}
                   onChange={setCurrency('purchase_price')}
-                  placeholder="650.000"
+                  placeholder="0"
                 />
               </div>
             </Field>
@@ -188,12 +188,12 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
                   Rp
                 </span>
                 <input
-                  className={`${baseInputCls(errors.selling_price)} pl-9 font-sans tabular-nums`}
+                  className={`${baseInputCls(errors.selling_price)} pl-9 font-sans tabular-nums placeholder:text-slate-400`}
                   type="text"
                   inputMode="numeric"
                   value={formatThousandDigits(form.selling_price)}
                   onChange={setCurrency('selling_price')}
-                  placeholder="850.000"
+                  placeholder="0"
                 />
               </div>
             </Field>
@@ -224,7 +224,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
               </div>
               {isEdit && (
                 <div className="text-[11px] text-slate-500 mt-1">
-                  Perubahan stok hanya dapat dilakukan melalui menu Penerimaan Barang, Barang Keluar, atau Stok Opname.
+                  Perubahan stok hanya dapat dilakukan melalui menu Penerimaan Barang, Mutasi Keluar, atau Stok Opname.
                 </div>
               )}
             </Field>

@@ -95,7 +95,7 @@ export default function ProductPage() {
             <input
               type="text"
               className="w-full h-9 pl-9 pr-3 bg-slate-50/70 border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition"
-              placeholder="Cari kode produk, nama produk, atau spesifikasi"
+              placeholder="Cari nama barang, kode SKU, atau ukuran ring..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
@@ -140,7 +140,7 @@ export default function ProductPage() {
         <div className="mb-4 px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center justify-between gap-3">
           <span className="inline-flex items-center gap-2 font-medium">
             <AlertTriangle className="w-4 h-4 shrink-0" />
-            <span>Gagal memuat katalog produk</span>
+            <span>Gagal memuat katalog produk.</span>
           </span>
           <button
             type="button"

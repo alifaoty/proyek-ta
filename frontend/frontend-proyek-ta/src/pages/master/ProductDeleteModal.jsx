@@ -11,9 +11,9 @@ export default function ProductDeleteModal({ product, onClose, onDeleted, onErro
     setBusy(true);
     try {
       await deleteProduct(product.id);
-      onDeleted('Produk berhasil dihapus');
+      onDeleted('Produk berhasil dihapus.');
     } catch (err) {
-      onError(errMsg(err, 'Gagal menghapus produk'));
+      onError(errMsg(err, 'Gagal menghapus produk.'));
     }
   };
 
@@ -24,12 +24,17 @@ export default function ProductDeleteModal({ product, onClose, onDeleted, onErro
     >
       <div className="w-full max-w-md bg-white border border-slate-200/80 rounded-xl shadow-xl overflow-hidden font-sans text-left">
         <div className="px-5 py-3.5 border-b border-slate-200 bg-slate-50/70">
-          <h2 className="text-sm font-bold text-slate-900">Hapus Produk</h2>
+          <h2 className="text-sm font-bold text-slate-900">Hapus Produk?</h2>
         </div>
-        <div className="p-5 text-xs text-slate-600 leading-relaxed">
-          Hapus <b className="font-mono text-slate-900">{product.code}</b> —{' '}
-          <span className="font-medium text-slate-900">{product.name}</span>? Tindakan ini tidak
-          dapat dibatalkan.
+        <div className="p-5 space-y-3 text-xs text-slate-600 leading-relaxed">
+          <p>
+            Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat
+            dibatalkan.
+          </p>
+          <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-900">
+            <b className="font-mono">{product.code}</b> —{' '}
+            <span className="font-medium">{product.name}</span>
+          </div>
         </div>
         <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-slate-200 bg-slate-50">
           <button
@@ -47,7 +52,7 @@ export default function ProductDeleteModal({ product, onClose, onDeleted, onErro
             disabled={busy}
           >
             {busy && <Loader2 className="w-4 h-4 animate-spin" />}
-            <span>Hapus</span>
+            <span>{busy ? 'Menghapus...' : 'Ya, Hapus'}</span>
           </button>
         </div>
       </div>

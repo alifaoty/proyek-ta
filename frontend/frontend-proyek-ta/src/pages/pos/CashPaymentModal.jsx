@@ -108,7 +108,7 @@ export default function CashPaymentModal({
           <div className="flex items-center gap-2">
             <Banknote className="w-4 h-4 text-blue-600" />
             <h2 className="text-sm font-bold text-slate-900">
-              Pembayaran Tunai (Cash)
+              Pembayaran Tunai
             </h2>
           </div>
           <button
@@ -157,7 +157,7 @@ export default function CashPaymentModal({
                 value={formatThousandDigits(paidAmount)}
                 onChange={(e) => setPaidAmount(parseDigits(e.target.value))}
                 disabled={submitting}
-                className="w-full h-11 pl-10 pr-3.5 bg-white border border-slate-300 rounded-lg font-sans tabular-nums text-base font-bold text-slate-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                className="w-full h-11 pl-10 pr-3.5 bg-white border border-slate-300 rounded-lg font-sans tabular-nums text-base font-bold text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition"
                 placeholder="0"
               />
             </div>

@@ -1,9 +1,19 @@
 import { CheckCircle2, Printer, QrCode, RotateCcw } from "lucide-react";
-import { rupiah } from "../../utils/formatters";
+import { formatDateTime, rupiah } from "../../utils/formatters";
 
 // Modal Cetak Struk Nota & Tagihan QRIS
 export default function ReceiptModal({ receipt, onNewTransaction }) {
   const isQris = receipt.payment_method === "qris";
+  const statusLabel =
+    receipt.payment_status === "settlement"
+      ? "Lunas"
+      : receipt.payment_status === "pending"
+        ? "Menunggu"
+        : receipt.payment_status;
+  const methodLabel =
+    String(receipt.payment_method || "").toLowerCase() === "cash"
+      ? "Tunai"
+      : receipt.payment_method;
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
@@ -24,7 +34,7 @@ export default function ReceiptModal({ receipt, onNewTransaction }) {
             </div>
           </div>
           <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-700 text-emerald-100">
-            {receipt.payment_status}
+            {statusLabel}
           </span>
         </div>
 
@@ -52,10 +62,7 @@ export default function ReceiptModal({ receipt, onNewTransaction }) {
             <div className="flex justify-between">
               <span className="text-slate-500">Tanggal:</span>
               <span className="text-right">
-                {new Date(receipt.created_at).toLocaleString("id-ID", {
-                  dateStyle: "short",
-                  timeStyle: "short",
-                })}
+                {formatDateTime(receipt.created_at)}
               </span>
             </div>
             <div className="flex justify-between">
@@ -65,7 +72,7 @@ export default function ReceiptModal({ receipt, onNewTransaction }) {
             <div className="flex justify-between">
               <span className="text-slate-500">Metode Bayar:</span>
               <span className="uppercase font-semibold text-right">
-                {receipt.payment_method}
+                {methodLabel}
               </span>
             </div>
           </div>
