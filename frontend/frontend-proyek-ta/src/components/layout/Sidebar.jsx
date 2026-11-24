@@ -17,7 +17,7 @@ const OWNER_ONLY = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/owner/stock-approvals', label: 'Persetujuan Stok Opname', icon: ClipboardCheck },
   { to: '/expenses', label: 'Biaya Operasional', icon: Wallet },
-  { to: '/reports/financial', label: 'Laporan Keuangan', icon: Receipt },
+  { to: '/reports', label: 'Laporan & Audit', icon: Receipt },
 ];
 
 function NavItem({ to, label, icon: Icon, onNavigate }) {

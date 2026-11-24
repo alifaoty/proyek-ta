@@ -11,6 +11,7 @@ const inventoryRoutes = require('./routes/inventoryRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const stockOpnameRoutes = require('./routes/stockOpnameRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
+const reportRoutes = require('./routes/reportRoutes');
 
 const app = express();
 app.use(cors());
@@ -52,6 +53,9 @@ app.use('/api/stock-opnames', stockOpnameRoutes);
 
 // Registrasi rute modul pengelolaan biaya operasional toko (Khusus Owner)
 app.use('/api/expenses', expenseRoutes);
+
+// Registrasi rute modul laporan finansial, audit trail & ekspor data (Khusus Owner)
+app.use('/api/reports', reportRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
