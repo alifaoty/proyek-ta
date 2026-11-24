@@ -50,6 +50,35 @@ const firstDayOfMonth = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
 };
 
+const formatReadableDate = (dateStr) => {
+  if (!dateStr) return '—';
+  const clean = String(dateStr).slice(0, 10);
+  const parts = clean.split('-');
+  if (parts.length === 3) {
+    const d = new Date(
+      Number(parts[0]),
+      Number(parts[1]) - 1,
+      Number(parts[2])
+    );
+    if (!Number.isNaN(d.getTime())) {
+      return d.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    }
+  }
+  return clean;
+};
+
+const formatAuditDescription = (desc) => {
+  if (!desc) return '—';
+  return String(desc).replace(
+    /Rp\s*(\d{4,})(?![.,\d])/g,
+    (_, digits) => 'Rp ' + Number(digits).toLocaleString('id-ID')
+  );
+};
+
 function AuditActionBadge({ action }) {
   const act = String(action || '').toUpperCase();
   let cls = 'bg-slate-100 text-slate-700 border-slate-200';
@@ -450,12 +479,13 @@ export default function ReportsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 text-left">
             {/* Tabel Ringkasan Laporan Laba Rugi Terstruktur */}
             <div className="lg:col-span-5 bg-white border border-slate-200/80 rounded-xl shadow-sm overflow-hidden">
-              <div className="px-5 py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+              <div className="px-5 py-3.5 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-2">
                 <h2 className="text-sm font-bold text-slate-900">
                   Ikhtisar Perhitungan Laba Rugi
                 </h2>
-                <span className="text-[11px] font-sans tabular-nums text-slate-500">
-                  {appliedPeriod.start_date} s.d. {appliedPeriod.end_date}
+                <span className="text-[11px] font-sans tabular-nums font-medium text-slate-500 whitespace-nowrap">
+                  {formatReadableDate(appliedPeriod.start_date)} &ndash;{' '}
+                  {formatReadableDate(appliedPeriod.end_date)}
                 </span>
               </div>
 
@@ -884,8 +914,8 @@ export default function ReportsPage() {
                         )}
                       </td>
                       <td className="py-2.5 px-4 max-w-md text-slate-700">
-                        <div className="line-clamp-2">
-                          {log.description || '—'}
+                        <div className="line-clamp-2 font-sans tabular-nums">
+                          {formatAuditDescription(log.description)}
                         </div>
                       </td>
                     </tr>
