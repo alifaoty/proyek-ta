@@ -20,66 +20,21 @@ import {
   getExpenses,
   updateExpense,
 } from '../../api/expenseApi';
-import useAuth from '../../hooks/useAuth';
+import ToastNotification from '../../components/common/ToastNotification';
 import {
+  CATEGORY_MAP,
+  EXPENSE_CATEGORIES,
+} from '../../constants/expenseConstants';
+import useAuth from '../../hooks/useAuth';
+import useToast from '../../hooks/useToast';
+import {
+  formatReadableDate,
   formatThousandDigits,
+  inputCls,
   parseDigits,
   rupiah,
   today,
 } from '../../utils/formatters';
-
-const EXPENSE_CATEGORIES = [
-  {
-    key: 'listrik_air_internet',
-    label: 'Listrik, Air & Internet',
-    badgeCls: 'bg-sky-50 text-sky-700 border-sky-200',
-  },
-  {
-    key: 'perlengkapan_bengkel',
-    label: 'Perlengkapan Bengkel',
-    badgeCls: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-  },
-  {
-    key: 'konsumsi_toko',
-    label: 'Konsumsi Toko',
-    badgeCls: 'bg-amber-50 text-amber-700 border-amber-200',
-  },
-  {
-    key: 'perawatan_alat',
-    label: 'Perawatan Alat',
-    badgeCls: 'bg-purple-50 text-purple-700 border-purple-200',
-  },
-  {
-    key: 'lain_lain',
-    label: 'Lain-lain',
-    badgeCls: 'bg-slate-100 text-slate-700 border-slate-200',
-  },
-];
-
-const CATEGORY_MAP = Object.fromEntries(
-  EXPENSE_CATEGORIES.map((c) => [c.key, c])
-);
-
-const formatExpenseDate = (dateStr) => {
-  if (!dateStr) return '—';
-  const clean = String(dateStr).slice(0, 10);
-  const parts = clean.split('-');
-  if (parts.length === 3) {
-    const d = new Date(
-      Number(parts[0]),
-      Number(parts[1]) - 1,
-      Number(parts[2])
-    );
-    if (!Number.isNaN(d.getTime())) {
-      return d.toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
-    }
-  }
-  return clean;
-};
 
 function CategoryBadge({ category }) {
   const meta = CATEGORY_MAP[category];
@@ -93,13 +48,6 @@ function CategoryBadge({ category }) {
     </span>
   );
 }
-
-const inputCls = (hasErr) =>
-  `w-full h-10 px-3 bg-white border rounded-lg text-xs text-slate-900 placeholder:text-slate-400 outline-none transition ${
-    hasErr
-      ? 'border-rose-500 focus:border-rose-600 focus:ring-2 focus:ring-rose-100'
-      : 'border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100'
-  }`;
 
 function ExpenseFormModal({ expense, onClose, onSaved }) {
   const isEdit = !!expense;
@@ -428,7 +376,7 @@ export default function ExpensesPage() {
 
   const [formModal, setFormModal] = useState(null); // null | { expense? }
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [toast, setToast] = useState(null);
+  const { toast, showToast } = useToast();
 
   const loadExpenses = useCallback(async () => {
     setLoading(true);
@@ -464,12 +412,6 @@ export default function ExpensesPage() {
       return () => clearTimeout(t);
     }
   }, [user, loadExpenses]);
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 3500);
-    return () => clearTimeout(t);
-  }, [toast]);
 
   const topCategoryAmount = useMemo(() => {
     if (!summary.top_category) return 0;
@@ -704,7 +646,7 @@ export default function ExpensesPage() {
                         {row.expense_code}
                       </div>
                       <div className="font-sans tabular-nums text-[11px] text-slate-500 mt-0.5">
-                        {formatExpenseDate(row.expense_date)}
+                        {formatReadableDate(row.expense_date)}
                       </div>
                     </td>
                     <td className="py-2.5 px-4 whitespace-nowrap">
@@ -783,7 +725,7 @@ export default function ExpensesPage() {
           onClose={() => setFormModal(null)}
           onSaved={(msg) => {
             setFormModal(null);
-            setToast({ type: 'success', message: msg });
+            showToast(msg, 'success');
             loadExpenses();
           }}
         />
@@ -796,25 +738,17 @@ export default function ExpensesPage() {
           onClose={() => setDeleteTarget(null)}
           onDeleted={(msg) => {
             setDeleteTarget(null);
-            setToast({ type: 'success', message: msg });
+            showToast(msg, 'success');
             loadExpenses();
           }}
           onError={(msg) => {
             setDeleteTarget(null);
-            setToast({ type: 'error', message: msg });
+            showToast(msg, 'error');
           }}
         />
       )}
 
-      {toast && (
-        <div
-          className={`fixed right-5 bottom-5 z-50 px-4 py-2.5 rounded-lg text-xs font-semibold text-white shadow-lg ${
-            toast.type === 'error' ? 'bg-rose-600' : 'bg-emerald-600'
-          }`}
-        >
-          {toast.message}
-        </div>
-      )}
+      <ToastNotification toast={toast} />
     </div>
   );
 }

@@ -6,18 +6,14 @@ import {
 } from 'lucide-react';
 import { getProducts } from '../../api/productApi';
 import { createOutbound, getMutations } from '../../api/inventoryApi';
+import ToastNotification from '../../components/common/ToastNotification';
 import { OUTBOUND_REASONS as REASONS } from '../../constants/productConstants';
+import useToast from '../../hooks/useToast';
+import { inputCls } from '../../utils/formatters';
 import { validateOutboundForm } from '../../utils/inventoryValidator';
 import MutationHistoryTable from './MutationHistoryTable';
 
 const EMPTY = { product_id: '', quantity: '', reason: '', notes: '' };
-
-const inputCls = (hasErr) =>
-  `w-full h-10 px-3 bg-white border rounded-lg text-xs text-slate-900 placeholder:text-slate-400 outline-none transition ${
-    hasErr
-      ? 'border-rose-500 focus:border-rose-600 focus:ring-2 focus:ring-rose-100'
-      : 'border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100'
-  }`;
 
 export default function OutboundPage() {
   const [products, setProducts] = useState([]);
@@ -26,7 +22,7 @@ export default function OutboundPage() {
   const [apiError, setApiError] = useState('');
   const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState('');
+  const { toast, showToast } = useToast();
 
   // State Tabel Riwayat Log Mutasi Persediaan
   const [mutations, setMutations] = useState([]);
@@ -66,12 +62,6 @@ export default function OutboundPage() {
     return () => clearTimeout(timer);
   }, [loadMutations]);
 
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(''), 4000);
-    return () => clearTimeout(t);
-  }, [toast]);
-
   const product = useMemo(
     () => products.find((p) => String(p.id) === form.product_id),
     [products, form.product_id]
@@ -97,7 +87,7 @@ export default function OutboundPage() {
         reason: form.reason,
         notes: form.notes.trim() || undefined,
       });
-      setToast(
+      showToast(
         `${res.data.message} Ref: ${res.data.data.reference_number}, sisa stok: ${res.data.data.stock_after}`
       );
       setForm(EMPTY);
@@ -313,11 +303,7 @@ export default function OutboundPage() {
         }}
       />
 
-      {toast && (
-        <div className="fixed right-5 bottom-5 z-50 px-4 py-2.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 shadow-lg">
-          {toast}
-        </div>
-      )}
+      <ToastNotification toast={toast} />
     </div>
   );
 }

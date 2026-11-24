@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Loader2, Lock, X } from 'lucide-react';
 import { createProduct, updateProduct } from '../../api/productApi';
 import { RING_SIZES } from '../../constants/productConstants';
-import { formatThousandDigits, parseDigits } from '../../utils/formatters';
+import { formatThousandDigits, inputCls as baseInputCls, parseDigits } from '../../utils/formatters';
 import { EMPTY_PRODUCT_FORM, validateProductForm } from '../../utils/productValidator';
 
 const errMsg = (err, fallback) => err.response?.data?.message || fallback;
@@ -18,13 +18,6 @@ function Field({ label, error, children, full }) {
     </div>
   );
 }
-
-const baseInputCls = (hasErr) =>
-  `w-full h-10 px-3 bg-white border rounded-lg text-xs text-slate-900 placeholder:text-slate-400 outline-none transition ${
-    hasErr
-      ? 'border-rose-500 focus:border-rose-600 focus:ring-2 focus:ring-rose-100'
-      : 'border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100'
-  }`;
 
 export default function ProductFormModal({ product, onClose, onSaved }) {
   const isEdit = !!product;

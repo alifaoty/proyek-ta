@@ -1,11 +1,10 @@
 import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMeApi, loginApi } from '../api/authApi';
+import { ROLE_HOME } from '../constants/authConstants';
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext(null);
-
-const ROLE_HOME = { admin: '/pos', owner: '/dashboard' };
 
 const readStoredUser = () => {
   try {

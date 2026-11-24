@@ -2,8 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { getProducts } from '../../api/productApi';
 import { createInbound } from '../../api/inventoryApi';
+import ToastNotification from '../../components/common/ToastNotification';
+import useToast from '../../hooks/useToast';
 import {
   formatThousandDigits,
+  inputCls,
   parseDigits,
   rupiah,
   today,
@@ -14,13 +17,6 @@ import InboundSummaryBar from './InboundSummaryBar';
 let rowSeq = 0;
 const newRow = () => ({ key: ++rowSeq, product_id: '', quantity: '', purchase_price: '' });
 
-const inputCls = (hasErr) =>
-  `w-full h-10 px-3 bg-white border rounded-lg text-xs text-slate-900 placeholder:text-slate-400 outline-none transition ${
-    hasErr
-      ? 'border-rose-500 focus:border-rose-600 focus:ring-2 focus:ring-rose-100'
-      : 'border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100'
-  }`;
-
 export default function InboundPage() {
   const [products, setProducts] = useState([]);
   const [loadError, setLoadError] = useState('');
@@ -29,19 +25,13 @@ export default function InboundPage() {
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState('');
+  const { toast, showToast } = useToast();
 
   useEffect(() => {
     getProducts()
       .then((res) => setProducts(res.data.data))
       .catch(() => setLoadError('Gagal memuat daftar produk.'));
   }, []);
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(''), 4000);
-    return () => clearTimeout(t);
-  }, [toast]);
 
   const productMap = useMemo(() => new Map(products.map((p) => [String(p.id), p])), [products]);
 
@@ -81,7 +71,7 @@ export default function InboundPage() {
           purchase_price: Number(r.purchase_price),
         })),
       });
-      setToast(`${res.data.message} (${res.data.data.receipt_number})`);
+      showToast(`${res.data.message} (${res.data.data.receipt_number})`);
       setHeader({ receipt_number: '', supplier_name: '', received_date: today(), notes: '' });
       setRows([newRow()]);
       setErrors({});
@@ -318,11 +308,7 @@ export default function InboundPage() {
         />
       </form>
 
-      {toast && (
-        <div className="fixed right-5 bottom-5 z-50 px-4 py-2.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 shadow-lg">
-          {toast}
-        </div>
-      )}
+      <ToastNotification toast={toast} />
     </div>
   );
 }

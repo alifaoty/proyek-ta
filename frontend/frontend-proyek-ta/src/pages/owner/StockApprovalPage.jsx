@@ -11,7 +11,9 @@ import {
 } from 'lucide-react';
 import { getOpnames } from '../../api/stockOpnameApi';
 import { DifferenceBadge } from '../../components/common/StatusBadges';
+import ToastNotification from '../../components/common/ToastNotification';
 import useAuth from '../../hooks/useAuth';
+import useToast from '../../hooks/useToast';
 import { formatDateTime } from '../../utils/formatters';
 import OpnameReviewModal from './OpnameReviewModal';
 
@@ -20,7 +22,7 @@ export default function StockApprovalPage() {
   const [pendingList, setPendingList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState('');
-  const [toast, setToast] = useState('');
+  const { toast, showToast } = useToast();
 
   // State modal konfirmasi: { mode: 'approve' | 'reject', item: Object } | null
   const [reviewTarget, setReviewTarget] = useState(null);
@@ -48,12 +50,6 @@ export default function StockApprovalPage() {
     }
   }, [user, loadPendingOpnames]);
 
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(''), 4000);
-    return () => clearTimeout(t);
-  }, [toast]);
-
   // Proteksi role Owner di level halaman
   if (user && user.role !== 'owner') {
     return <Navigate to="/unauthorized" replace />;
@@ -61,7 +57,7 @@ export default function StockApprovalPage() {
 
   const handleReviewSuccess = (message) => {
     setReviewTarget(null);
-    setToast(message);
+    showToast(message);
     loadPendingOpnames();
   };
 
@@ -233,11 +229,7 @@ export default function StockApprovalPage() {
         />
       )}
 
-      {toast && (
-        <div className="fixed right-5 bottom-5 z-50 px-4 py-2.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 shadow-lg">
-          {toast}
-        </div>
-      )}
+      <ToastNotification toast={toast} />
     </div>
   );
 }

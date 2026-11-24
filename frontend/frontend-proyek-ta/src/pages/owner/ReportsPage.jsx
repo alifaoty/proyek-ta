@@ -28,59 +28,24 @@ import {
   MutationTypeBadge,
   StockChangeValue,
 } from '../../components/common/StatusBadges';
+import ToastNotification from '../../components/common/ToastNotification';
+import { EXPENSE_CATEGORY_LABELS } from '../../constants/expenseConstants';
 import useAuth from '../../hooks/useAuth';
-import { formatDateTime, rupiah, today } from '../../utils/formatters';
+import useToast from '../../hooks/useToast';
+import {
+  firstDayOfMonth,
+  formatAuditDescription,
+  formatDateTime,
+  formatReadableDate,
+  rupiah,
+  today,
+} from '../../utils/formatters';
 
 const REPORT_TABS = [
   { key: 'financial', label: 'Laporan Laba / Rugi' },
   { key: 'stock', label: 'Persediaan & Kartu Mutasi' },
   { key: 'audit', label: 'Log Jejak Audit (Audit Trail)' },
 ];
-
-const EXPENSE_CATEGORY_LABELS = {
-  listrik_air_internet: 'Listrik, Air & Internet',
-  perlengkapan_bengkel: 'Perlengkapan Bengkel',
-  konsumsi_toko: 'Konsumsi Toko',
-  perawatan_alat: 'Perawatan Alat',
-  lain_lain: 'Lain-lain',
-};
-
-const firstDayOfMonth = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
-};
-
-const formatReadableDate = (dateStr) => {
-  if (!dateStr) return '—';
-  const clean = String(dateStr).slice(0, 10);
-  const parts = clean.split('-');
-  if (parts.length === 3) {
-    const d = new Date(
-      Number(parts[0]),
-      Number(parts[1]) - 1,
-      Number(parts[2])
-    );
-    if (!Number.isNaN(d.getTime())) {
-      return d.toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
-    }
-  }
-  return clean;
-};
-
-const formatAuditDescription = (desc) => {
-  if (!desc) return '—';
-  return String(desc)
-    .replace(
-      /Rp\s*(\d{4,})(?![.,\d])/g,
-      (_, digits) => 'Rp ' + Number(digits).toLocaleString('id-ID')
-    )
-    .replace(/Stock Opname/g, 'Stok Opname')
-    .replace(/stock opname/g, 'stok opname');
-};
 
 function AuditActionBadge({ action }) {
   const act = String(action || '').toUpperCase();
@@ -120,7 +85,7 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState('');
   const [exportingFormat, setExportingFormat] = useState(null); // 'xlsx' | 'pdf' | null
-  const [toast, setToast] = useState(null);
+  const { toast, showToast } = useToast();
 
   // Data per tab
   const [financialData, setFinancialData] = useState({
@@ -189,12 +154,6 @@ export default function ReportsPage() {
     }
   }, [user, loadActiveTabReport]);
 
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 3500);
-    return () => clearTimeout(t);
-  }, [toast]);
-
   if (user && user.role !== 'owner') {
     return <Navigate to="/unauthorized" replace />;
   }
@@ -232,15 +191,12 @@ export default function ReportsPage() {
         start_date: appliedPeriod.start_date,
         end_date: appliedPeriod.end_date,
       });
-      setToast({
-        type: 'success',
-        message: `Berkas ${filename} berhasil diunduh.`,
-      });
+      showToast(`Berkas ${filename} berhasil diunduh.`, 'success');
     } catch {
-      setToast({
-        type: 'error',
-        message: `Gagal mengekspor laporan ke format ${format.toUpperCase()}.`,
-      });
+      showToast(
+        `Gagal mengekspor laporan ke format ${format.toUpperCase()}.`,
+        'error'
+      );
     } finally {
       setExportingFormat(null);
     }
@@ -932,15 +888,7 @@ export default function ReportsPage() {
         </div>
       )}
 
-      {toast && (
-        <div
-          className={`fixed right-5 bottom-5 z-50 px-4 py-2.5 rounded-lg text-xs font-semibold text-white shadow-lg ${
-            toast.type === 'error' ? 'bg-rose-600' : 'bg-emerald-600'
-          }`}
-        >
-          {toast.message}
-        </div>
-      )}
+      <ToastNotification toast={toast} />
     </div>
   );
 }

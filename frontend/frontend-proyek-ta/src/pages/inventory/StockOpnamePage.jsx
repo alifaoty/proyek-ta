@@ -12,6 +12,8 @@ import {
 import { getProducts } from '../../api/productApi';
 import { createOpname, getOpnames } from '../../api/stockOpnameApi';
 import { DifferenceBadge } from '../../components/common/StatusBadges';
+import ToastNotification from '../../components/common/ToastNotification';
+import useToast from '../../hooks/useToast';
 import { validateOpnameForm } from '../../utils/inventoryValidator';
 import OpnameHistoryTable from './OpnameHistoryTable';
 
@@ -33,7 +35,7 @@ export default function StockOpnamePage() {
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [toast, setToast] = useState('');
+  const { toast, showToast } = useToast();
 
   const loadOpnames = useCallback(
     async (isMounted = () => true) => {
@@ -81,12 +83,6 @@ export default function StockOpnamePage() {
       clearTimeout(timer);
     };
   }, [loadOpnames]);
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(''), 4000);
-    return () => clearTimeout(t);
-  }, [toast]);
 
   // Tutup dropdown combobox saat klik di luar area combobox
   useEffect(() => {
@@ -143,7 +139,7 @@ export default function StockOpnamePage() {
         notes: notes.trim() || undefined,
       };
       const res = await createOpname(payload);
-      setToast(
+      showToast(
         `${res.data.message} (${res.data.data?.opname_code || 'Menunggu Persetujuan'})`
       );
       setProductId('');
@@ -521,11 +517,7 @@ export default function StockOpnamePage() {
         }}
       />
 
-      {toast && (
-        <div className="fixed right-5 bottom-5 z-50 px-4 py-2.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 shadow-lg">
-          {toast}
-        </div>
-      )}
+      <ToastNotification toast={toast} />
     </div>
   );
 }

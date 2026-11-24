@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ShieldAlert } from 'lucide-react';
+import { ROLE_HOME } from '../../constants/authConstants';
 import useAuth from '../../hooks/useAuth';
-
-const ROLE_HOME = { admin: '/pos', owner: '/dashboard' };
 
 export default function UnauthorizedPage() {
   const { user, isAuthenticated } = useAuth();
