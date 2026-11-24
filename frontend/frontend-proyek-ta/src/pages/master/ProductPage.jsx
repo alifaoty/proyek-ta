@@ -4,7 +4,9 @@ import {
 } from 'lucide-react';
 import { getProducts } from '../../api/productApi';
 import SegmentedTabs from '../../components/common/SegmentedTabs';
+import ToastNotification from '../../components/common/ToastNotification';
 import { RING_SIZES, PRODUCT_TABS as TABS } from '../../constants/productConstants';
+import useToast from '../../hooks/useToast';
 import { rupiah } from '../../utils/formatters';
 import ProductDeleteModal from './ProductDeleteModal';
 import ProductFormModal from './ProductFormModal';
@@ -20,7 +22,7 @@ export default function ProductPage() {
   const [stock, setStock] = useState('');
   const [modal, setModal] = useState(null); // { product? }
   const [toDelete, setToDelete] = useState(null);
-  const [toast, setToast] = useState(null);
+  const { toast, showToast } = useToast();
 
   // Debounce pencarian
   useEffect(() => {
@@ -55,14 +57,6 @@ export default function ProductPage() {
     const timer = setTimeout(() => { load(); }, 0);
     return () => clearTimeout(timer);
   }, [load]);
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 3500);
-    return () => clearTimeout(t);
-  }, [toast]);
-
-  const showToast = (type, message) => setToast({ type, message });
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans p-4 sm:p-6 text-slate-900">
@@ -289,7 +283,7 @@ export default function ProductPage() {
           onClose={() => setModal(null)}
           onSaved={(msg) => {
             setModal(null);
-            showToast('success', msg);
+            showToast(msg, 'success');
             load();
           }}
         />
@@ -300,24 +294,16 @@ export default function ProductPage() {
           onClose={() => setToDelete(null)}
           onDeleted={(msg) => {
             setToDelete(null);
-            showToast('success', msg);
+            showToast(msg, 'success');
             load();
           }}
           onError={(msg) => {
             setToDelete(null);
-            showToast('error', msg);
+            showToast(msg, 'error');
           }}
         />
       )}
-      {toast && (
-        <div
-          className={`fixed right-5 bottom-5 z-50 px-4 py-2.5 rounded-lg text-xs font-semibold text-white shadow-lg ${
-            toast.type === 'error' ? 'bg-rose-600' : 'bg-emerald-600'
-          }`}
-        >
-          {toast.message}
-        </div>
-      )}
+      <ToastNotification toast={toast} />
     </div>
   );
 }

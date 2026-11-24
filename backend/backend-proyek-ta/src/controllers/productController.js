@@ -1,6 +1,6 @@
 const db = require('../config/database');
 const { logAudit } = require('../utils/auditLogger');
-const { fail } = require('../utils/httpHelper');
+const { fail, getActorId, handleControllerError } = require('../utils/httpHelper');
 const { isValidId } = require('../utils/validators');
 
 const CATEGORIES = ['ban', 'velg'];
@@ -20,10 +20,8 @@ const formatProduct = (row) => ({
   is_available: Boolean(row.is_available),
 });
 
-const serverError = (res, error, label) => {
-  console.error(`Kesalahan ${label}:`, error);
-  return fail(res, 500, 'Terjadi kesalahan internal server');
-};
+const serverError = (res, error, label, options) =>
+  handleControllerError(res, error, label, options);
 
 /**
  * Validasi & normalisasi payload produk.
@@ -163,7 +161,7 @@ const createProduct = async (req, res) => {
     );
 
     await logAudit({
-      userId: req.user.id,
+      userId: getActorId(req),
       action: 'CREATE_PRODUCT',
       endpoint: 'POST /api/products',
       description: `Menambahkan produk baru: ${data.code} - ${data.name}`,
@@ -179,8 +177,9 @@ const createProduct = async (req, res) => {
       data: formatProduct(rows[0]),
     });
   } catch (error) {
-    if (error.code === 'ER_DUP_ENTRY') return fail(res, 409, 'Kode produk sudah terdaftar');
-    return serverError(res, error, 'createProduct');
+    return serverError(res, error, 'createProduct', {
+      dupMessage: 'Kode produk sudah terdaftar',
+    });
   }
 };
 
@@ -218,7 +217,7 @@ const updateProduct = async (req, res) => {
     );
 
     await logAudit({
-      userId: req.user.id,
+      userId: getActorId(req),
       action: 'UPDATE_PRODUCT',
       endpoint: `PUT /api/products/${id}`,
       description: `Memperbarui produk: ${data.code} - ${data.name}`,
@@ -232,8 +231,9 @@ const updateProduct = async (req, res) => {
       data: formatProduct(rows[0]),
     });
   } catch (error) {
-    if (error.code === 'ER_DUP_ENTRY') return fail(res, 409, 'Kode produk sudah terdaftar');
-    return serverError(res, error, 'updateProduct');
+    return serverError(res, error, 'updateProduct', {
+      dupMessage: 'Kode produk sudah terdaftar',
+    });
   }
 };
 
@@ -256,7 +256,7 @@ const deleteProduct = async (req, res) => {
     await db.execute('DELETE FROM products WHERE id = ?', [id]);
 
     await logAudit({
-      userId: req.user.id,
+      userId: getActorId(req),
       action: 'DELETE_PRODUCT',
       endpoint: `DELETE /api/products/${id}`,
       description: `Menghapus produk: ${existing[0].code} - ${existing[0].name}`,
@@ -265,10 +265,9 @@ const deleteProduct = async (req, res) => {
     return res.status(200).json({ success: true, message: 'Produk berhasil dihapus dari sistem' });
   } catch (error) {
     // Foreign key RESTRICT (mis. stock_opname_details) juga dianggap berelasi
-    if (error.code === 'ER_ROW_IS_REFERENCED_2') {
-      return fail(res, 400, 'Produk memiliki riwayat mutasi/transaksi dan tidak boleh dihapus');
-    }
-    return serverError(res, error, 'deleteProduct');
+    return serverError(res, error, 'deleteProduct', {
+      referencedMessage: 'Produk memiliki riwayat mutasi/transaksi dan tidak boleh dihapus',
+    });
   }
 };
 

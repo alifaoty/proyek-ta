@@ -1,41 +1,17 @@
 const db = require('../config/database');
 const { logAudit } = require('../utils/auditLogger');
-const { HttpError, fail } = require('../utils/httpHelper');
-const { isNonNegNumber, isPositiveInt } = require('../utils/validators');
+const { generateNumber } = require('../utils/codeGenerator');
+const { HttpError, fail, getActorId, handleControllerError } = require('../utils/httpHelper');
+const { isNonNegNumber, isPositiveInt, isValidDateStr } = require('../utils/validators');
 
 const OUTBOUND_REASONS = ['retur_rusak', 'pemakaian_internal', 'peminjaman', 'hilang'];
 const MUTATION_TYPES = ['masuk', 'penjualan', 'keluar_non_penjualan', 'penyesuaian'];
 
-// Format tanggal YYMMDD berdasarkan waktu server
-const datePart = () => {
-  const d = new Date();
-  const yy = String(d.getFullYear()).slice(-2);
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yy}${mm}${dd}`;
-};
-
-/**
- * Membuat nomor urut harian berikutnya (PREFIX-YYMMDD-XXXX) di dalam transaksi berjalan.
- * Baris terakhir dikunci agar permintaan paralel tidak menghasilkan nomor yang sama.
- */
-const generateNumber = async (conn, prefix, table, column) => {
-  const base = `${prefix}-${datePart()}-`;
-  const [rows] = await conn.execute(
-    `SELECT ${column} AS num FROM ${table} WHERE ${column} LIKE ? ORDER BY ${column} DESC LIMIT 1 FOR UPDATE`,
-    [`${base}%`]
-  );
-  const last = rows.length ? parseInt(rows[0].num.slice(base.length), 10) : 0;
-  return `${base}${String((Number.isNaN(last) ? 0 : last) + 1).padStart(4, '0')}`;
-};
-
-const handleError = (res, error, label) => {
-  if (error instanceof HttpError) return fail(res, error.status, error.message);
-  if (error.code === 'ER_DUP_ENTRY') return fail(res, 409, 'Nomor referensi sudah terdaftar');
-  if (error.code === 'ER_NO_REFERENCED_ROW_2') return fail(res, 400, 'Data referensi (produk/pengguna) tidak valid');
-  console.error(`Kesalahan ${label}:`, error);
-  return fail(res, 500, 'Terjadi kesalahan internal server');
-};
+const handleError = (res, error, label) =>
+  handleControllerError(res, error, label, {
+    dupMessage: 'Nomor referensi sudah terdaftar',
+    refMessage: 'Data referensi (produk/pengguna) tidak valid',
+  });
 
 // POST /api/inventory/inbound
 const createInbound = async (req, res) => {
@@ -49,9 +25,7 @@ const createInbound = async (req, res) => {
   if (!supplierName || supplierName.length > 150) {
     return fail(res, 400, 'Nama supplier wajib diisi (maksimal 150 karakter)');
   }
-  const parsedDate = new Date(`${receivedDate}T00:00:00Z`);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(receivedDate) || Number.isNaN(parsedDate.getTime()) ||
-      parsedDate.toISOString().slice(0, 10) !== receivedDate) {
+  if (!isValidDateStr(receivedDate)) {
     return fail(res, 400, 'Tanggal penerimaan wajib berformat YYYY-MM-DD yang valid');
   }
   if (receiptNumber.length > 50) return fail(res, 400, 'Nomor penerimaan maksimal 50 karakter');
@@ -75,9 +49,10 @@ const createInbound = async (req, res) => {
       receiptNumber = await generateNumber(conn, 'INB', 'inbound_receipts', 'receipt_number');
     }
 
+    const actorId = getActorId(req);
     const [header] = await conn.execute(
       'INSERT INTO inbound_receipts (receipt_number, supplier_name, received_date, notes, created_by) VALUES (?, ?, ?, ?, ?)',
-      [receiptNumber, supplierName, receivedDate, notes, req.user.id]
+      [receiptNumber, supplierName, receivedDate, notes, actorId]
     );
     const receiptId = header.insertId;
 
@@ -100,13 +75,13 @@ const createInbound = async (req, res) => {
       await conn.execute(
         `INSERT INTO stock_mutation_logs (product_id, mutation_type, reference_code, quantity_change, stock_after, notes, user_id)
          VALUES (?, 'masuk', ?, ?, ?, ?, ?)`,
-        [productId, receiptNumber, quantity, stockAfter, `Supplier: ${supplierName}`.slice(0, 255), req.user.id]
+        [productId, receiptNumber, quantity, stockAfter, `Supplier: ${supplierName}`.slice(0, 255), actorId]
       );
     }
 
     await logAudit(
       {
-        userId: req.user.id,
+        userId: actorId,
         action: 'INBOUND_RECEIPT',
         endpoint: 'POST /api/inventory/inbound',
         description: `Penerimaan barang masuk ${receiptNumber} dari ${supplierName} (${body.items.length} item)`,
@@ -164,23 +139,24 @@ const createOutbound = async (req, res) => {
       referenceNumber = await generateNumber(conn, 'OUT', 'non_sales_outbounds', 'reference_number');
     }
 
+    const actorId = getActorId(req);
     await conn.execute('UPDATE products SET current_stock = ? WHERE id = ?', [stockAfter, productId]);
     await conn.execute(
       'INSERT INTO non_sales_outbounds (reference_number, product_id, quantity, reason, notes, reported_by) VALUES (?, ?, ?, ?, ?, ?)',
-      [referenceNumber, productId, quantity, body.reason, notes, req.user.id]
+      [referenceNumber, productId, quantity, body.reason, notes, actorId]
     );
     await conn.execute(
       `INSERT INTO stock_mutation_logs (product_id, mutation_type, reference_code, quantity_change, stock_after, notes, user_id)
        VALUES (?, 'keluar_non_penjualan', ?, ?, ?, ?, ?)`,
       [
         productId, referenceNumber, -Math.abs(quantity), stockAfter,
-        `[${body.reason.toUpperCase()}] ${notes || ''}`.slice(0, 255), req.user.id,
+        `[${body.reason.toUpperCase()}] ${notes || ''}`.slice(0, 255), actorId,
       ]
     );
 
     await logAudit(
       {
-        userId: req.user.id,
+        userId: actorId,
         action: 'NON_SALES_OUTBOUND',
         endpoint: 'POST /api/inventory/outbound',
         description: `Pengeluaran non-penjualan ${referenceNumber}: ${rows[0].name} x${quantity} (${body.reason})`,

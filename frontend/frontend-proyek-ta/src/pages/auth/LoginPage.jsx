@@ -8,9 +8,8 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
+import { ROLE_HOME } from '../../constants/authConstants';
 import useAuth from '../../hooks/useAuth';
-
-const ROLE_HOME = { admin: '/pos', owner: '/dashboard' };
 
 export default function LoginPage() {
   const { login, isAuthenticated, user, loading: authLoading } = useAuth();

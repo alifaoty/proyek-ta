@@ -1,13 +1,13 @@
 const db = require('../config/database');
+const { processPosItemsAndStock } = require('../services/transactionService');
 const { logAudit } = require('../utils/auditLogger');
-const { HttpError, fail } = require('../utils/httpHelper');
+const { generateInvoiceCode } = require('../utils/codeGenerator');
+const { formatIdr } = require('../utils/formatters');
+const { HttpError, fail, getActorId, handleControllerError } = require('../utils/httpHelper');
 const { isNonNegNumber, isPositiveInt } = require('../utils/validators');
 
 const PAYMENT_METHODS = ['cash', 'qris', 'va'];
 const PAYMENT_STATUSES = ['pending', 'settlement', 'expire', 'cancel'];
-
-const formatIdr = (val) =>
-  Math.round(Number(val || 0)).toLocaleString('id-ID');
 
 /**
  * Validasi daftar item keranjang belanja POS.
@@ -30,21 +30,14 @@ const validateItems = (items) => {
   return null;
 };
 
-/**
- * Buat kode invoice unik: INV-XXXXXXXX (8 digit terakhir timestamp)
- */
-const generateInvoiceCode = () => `INV-${Date.now().toString().slice(-8)}`;
-
-const handleError = (res, error, label) => {
-  if (error instanceof HttpError) return fail(res, error.status, error.message);
-  if (error.code === 'ER_DUP_ENTRY') return fail(res, 409, 'Kode invoice sudah terdaftar, silakan ulangi.');
-  console.error(`Kesalahan ${label}:`, error);
-  return fail(res, 500, 'Terjadi kesalahan internal server');
-};
+const handleError = (res, error, label) =>
+  handleControllerError(res, error, label, {
+    dupMessage: 'Kode invoice sudah terdaftar, silakan ulangi.',
+  });
 
 // POST /api/transactions (Pembayaran Tunai / Cash)
 const createCashTransaction = async (req, res) => {
-  const cashierId = req.user?.id || req.user?.userId;
+  const cashierId = getActorId(req);
   if (!cashierId) return fail(res, 401, 'Identitas kasir tidak terdeteksi.');
 
   const body = req.body || {};
@@ -88,59 +81,13 @@ const createCashTransaction = async (req, res) => {
     );
     const transactionId = headerResult.insertId;
 
-    for (const item of items) {
-      const productId = Number(item.product_id);
-      const qty = Number(item.quantity);
-      const unitPrice = Number(item.unit_price);
-
-      const [prodRows] = await conn.execute(
-        'SELECT name, purchase_price, current_stock FROM products WHERE id = ? FOR UPDATE',
-        [productId]
-      );
-      if (prodRows.length === 0) {
-        throw new HttpError(404, `Produk dengan ID ${productId} tidak ditemukan.`);
-      }
-
-      const product = prodRows[0];
-      const currentStock = Number(product.current_stock);
-
-      if (qty > currentStock) {
-        throw new HttpError(
-          400,
-          `Stok produk ${product.name} tidak mencukupi (sisa: ${currentStock} unit)`
-        );
-      }
-
-      const costPrice = Number(product.purchase_price);
-      const itemSubtotal = qty * unitPrice;
-      const stockAfter = currentStock - qty;
-
-      await conn.execute(
-        `INSERT INTO transaction_items
-          (transaction_id, product_id, quantity, cost_price, unit_price, subtotal)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [transactionId, productId, qty, costPrice, unitPrice, itemSubtotal]
-      );
-
-      await conn.execute(
-        'UPDATE products SET current_stock = current_stock - ? WHERE id = ?',
-        [qty, productId]
-      );
-
-      await conn.execute(
-        `INSERT INTO stock_mutation_logs
-          (product_id, mutation_type, reference_code, quantity_change, stock_after, notes, user_id)
-         VALUES (?, 'penjualan', ?, ?, ?, ?, ?)`,
-        [
-          productId,
-          invoiceCode,
-          -Math.abs(qty),
-          stockAfter,
-          `Penjualan Kasir POS: ${invoiceCode}`,
-          cashierId,
-        ]
-      );
-    }
+    await processPosItemsAndStock(conn, {
+      items,
+      transactionId,
+      invoiceCode,
+      cashierId,
+      mutationNotePrefix: 'Penjualan Kasir POS',
+    });
 
     await logAudit(
       {
@@ -181,7 +128,7 @@ const createCashTransaction = async (req, res) => {
 
 // POST /api/transactions/charge-qris (Tagihan Pembayaran QRIS)
 const createQrisTransaction = async (req, res) => {
-  const cashierId = req.user?.id || req.user?.userId;
+  const cashierId = getActorId(req);
   if (!cashierId) return fail(res, 401, 'Identitas kasir tidak terdeteksi.');
 
   const body = req.body || {};
@@ -216,59 +163,13 @@ const createQrisTransaction = async (req, res) => {
     );
     const transactionId = headerResult.insertId;
 
-    for (const item of items) {
-      const productId = Number(item.product_id);
-      const qty = Number(item.quantity);
-      const unitPrice = Number(item.unit_price);
-
-      const [prodRows] = await conn.execute(
-        'SELECT name, purchase_price, current_stock FROM products WHERE id = ? FOR UPDATE',
-        [productId]
-      );
-      if (prodRows.length === 0) {
-        throw new HttpError(404, `Produk dengan ID ${productId} tidak ditemukan.`);
-      }
-
-      const product = prodRows[0];
-      const currentStock = Number(product.current_stock);
-
-      if (qty > currentStock) {
-        throw new HttpError(
-          400,
-          `Stok produk ${product.name} tidak mencukupi (sisa: ${currentStock} unit)`
-        );
-      }
-
-      const costPrice = Number(product.purchase_price);
-      const itemSubtotal = qty * unitPrice;
-      const stockAfter = currentStock - qty;
-
-      await conn.execute(
-        `INSERT INTO transaction_items
-          (transaction_id, product_id, quantity, cost_price, unit_price, subtotal)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [transactionId, productId, qty, costPrice, unitPrice, itemSubtotal]
-      );
-
-      await conn.execute(
-        'UPDATE products SET current_stock = current_stock - ? WHERE id = ?',
-        [qty, productId]
-      );
-
-      await conn.execute(
-        `INSERT INTO stock_mutation_logs
-          (product_id, mutation_type, reference_code, quantity_change, stock_after, notes, user_id)
-         VALUES (?, 'penjualan', ?, ?, ?, ?, ?)`,
-        [
-          productId,
-          invoiceCode,
-          -Math.abs(qty),
-          stockAfter,
-          `Penjualan Kasir POS (QRIS): ${invoiceCode}`,
-          cashierId,
-        ]
-      );
-    }
+    await processPosItemsAndStock(conn, {
+      items,
+      transactionId,
+      invoiceCode,
+      cashierId,
+      mutationNotePrefix: 'Penjualan Kasir POS (QRIS)',
+    });
 
     await logAudit(
       {

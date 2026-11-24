@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const db = require('../config/database');
 const { JWT_EXPIRES_IN, JWT_SECRET } = require('../config/jwtConfig');
 const { logAudit } = require('../utils/auditLogger');
+const { fail, getActorId, handleControllerError } = require('../utils/httpHelper');
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -56,8 +57,7 @@ const login = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Kesalahan login:', error);
-    return res.status(500).json({ success: false, message: 'Terjadi kesalahan internal server' });
+    return handleControllerError(res, error, 'login');
   }
 };
 
@@ -66,11 +66,11 @@ const getMe = async (req, res) => {
   try {
     const [rows] = await db.execute(
       'SELECT id, name, email, role FROM users WHERE id = ? LIMIT 1',
-      [req.user.id]
+      [getActorId(req)]
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Pengguna tidak ditemukan' });
+      return fail(res, 404, 'Pengguna tidak ditemukan');
     }
 
     return res.status(200).json({
@@ -79,8 +79,7 @@ const getMe = async (req, res) => {
       data: rows[0]
     });
   } catch (error) {
-    console.error('Kesalahan getMe:', error);
-    return res.status(500).json({ success: false, message: 'Terjadi kesalahan internal server' });
+    return handleControllerError(res, error, 'getMe');
   }
 };
 

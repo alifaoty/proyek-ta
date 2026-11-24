@@ -4,6 +4,7 @@ const cors = require('cors');
 
 // Panggil konfigurasi database agar blok tes koneksi di atas otomatis berjalan
 const db = require('./config/database');
+const { initializeSchemas } = require('./config/schemaInitializer');
 
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
@@ -58,6 +59,15 @@ app.use('/api/expenses', expenseRoutes);
 app.use('/api/reports', reportRoutes);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(` Server aktif berjalan di http://localhost:${PORT}`);
-});
+
+(async () => {
+  try {
+    await initializeSchemas();
+  } catch (error) {
+    console.error('Gagal menginisialisasi skema database:', error.message);
+  }
+
+  app.listen(PORT, () => {
+    console.log(` Server aktif berjalan di http://localhost:${PORT}`);
+  });
+})();

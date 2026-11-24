@@ -3,412 +3,23 @@ import { Navigate } from 'react-router-dom';
 import {
   AlertTriangle,
   Calendar,
-  FileText,
   Loader2,
   Pencil,
   Plus,
   RefreshCw,
   RotateCcw,
   Trash2,
-  TrendingUp,
   Wallet,
-  X,
 } from 'lucide-react';
-import {
-  createExpense,
-  deleteExpense,
-  getExpenses,
-  updateExpense,
-} from '../../api/expenseApi';
+import { getExpenses } from '../../api/expenseApi';
+import ToastNotification from '../../components/common/ToastNotification';
+import { EXPENSE_CATEGORIES } from '../../constants/expenseConstants';
 import useAuth from '../../hooks/useAuth';
-import {
-  formatThousandDigits,
-  parseDigits,
-  rupiah,
-  today,
-} from '../../utils/formatters';
-
-const EXPENSE_CATEGORIES = [
-  {
-    key: 'listrik_air_internet',
-    label: 'Listrik, Air & Internet',
-    badgeCls: 'bg-sky-50 text-sky-700 border-sky-200',
-  },
-  {
-    key: 'perlengkapan_bengkel',
-    label: 'Perlengkapan Bengkel',
-    badgeCls: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-  },
-  {
-    key: 'konsumsi_toko',
-    label: 'Konsumsi Toko',
-    badgeCls: 'bg-amber-50 text-amber-700 border-amber-200',
-  },
-  {
-    key: 'perawatan_alat',
-    label: 'Perawatan Alat',
-    badgeCls: 'bg-purple-50 text-purple-700 border-purple-200',
-  },
-  {
-    key: 'lain_lain',
-    label: 'Lain-lain',
-    badgeCls: 'bg-slate-100 text-slate-700 border-slate-200',
-  },
-];
-
-const CATEGORY_MAP = Object.fromEntries(
-  EXPENSE_CATEGORIES.map((c) => [c.key, c])
-);
-
-const formatExpenseDate = (dateStr) => {
-  if (!dateStr) return '—';
-  const clean = String(dateStr).slice(0, 10);
-  const parts = clean.split('-');
-  if (parts.length === 3) {
-    const d = new Date(
-      Number(parts[0]),
-      Number(parts[1]) - 1,
-      Number(parts[2])
-    );
-    if (!Number.isNaN(d.getTime())) {
-      return d.toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
-    }
-  }
-  return clean;
-};
-
-function CategoryBadge({ category }) {
-  const meta = CATEGORY_MAP[category];
-  return (
-    <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-semibold border whitespace-nowrap ${
-        meta ? meta.badgeCls : 'bg-slate-100 text-slate-700 border-slate-200'
-      }`}
-    >
-      {meta ? meta.label : category || '—'}
-    </span>
-  );
-}
-
-const inputCls = (hasErr) =>
-  `w-full h-10 px-3 bg-white border rounded-lg text-xs text-slate-900 placeholder:text-slate-400 outline-none transition ${
-    hasErr
-      ? 'border-rose-500 focus:border-rose-600 focus:ring-2 focus:ring-rose-100'
-      : 'border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100'
-  }`;
-
-function ExpenseFormModal({ expense, onClose, onSaved }) {
-  const isEdit = !!expense;
-  const [form, setForm] = useState(() =>
-    isEdit
-      ? {
-          category: expense.category || 'perlengkapan_bengkel',
-          amount: String(Math.round(Number(expense.amount || 0))),
-          expense_date: String(expense.expense_date || today()).slice(0, 10),
-          notes: expense.notes || '',
-        }
-      : {
-          category: '',
-          amount: '',
-          expense_date: today(),
-          notes: '',
-        }
-  );
-  const [errors, setErrors] = useState({});
-  const [apiError, setApiError] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  const validate = () => {
-    const next = {};
-    if (!form.category || !CATEGORY_MAP[form.category]) {
-      next.category = 'Kategori biaya operasional wajib dipilih.';
-    }
-    const amt = Number(form.amount);
-    if (!form.amount || Number.isNaN(amt) || amt <= 0) {
-      next.amount = 'Nominal biaya harus lebih dari Rp 0.';
-    }
-    if (!form.expense_date) {
-      next.expense_date = 'Tanggal pengeluaran wajib diisi.';
-    }
-    return next;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const v = validate();
-    setErrors(v);
-    setApiError('');
-    if (Object.keys(v).length > 0) return;
-
-    setSaving(true);
-    try {
-      const payload = {
-        category: form.category,
-        amount: Number(form.amount),
-        expense_date: form.expense_date,
-        notes: form.notes.trim() || undefined,
-      };
-      if (isEdit) {
-        const res = await updateExpense(expense.id, payload);
-        onSaved(
-          res.data?.message || 'Data biaya operasional berhasil diperbarui.'
-        );
-      } else {
-        const res = await createExpense(payload);
-        onSaved(
-          res.data?.message || 'Data biaya operasional berhasil disimpan.'
-        );
-      }
-    } catch (err) {
-      setApiError(
-        err.response?.data?.message ||
-          'Gagal menyimpan data biaya operasional.'
-      );
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div
-      className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
-      onMouseDown={(e) => e.target === e.currentTarget && !saving && onClose()}
-    >
-      <form
-        onSubmit={handleSubmit}
-        noValidate
-        className="w-full max-w-lg bg-white border border-slate-200/80 rounded-xl shadow-xl overflow-hidden font-sans text-left"
-      >
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 bg-slate-50">
-          <h2 className="text-sm font-bold text-slate-900">
-            {isEdit
-              ? 'Edit Biaya Operasional'
-              : 'Catat Pengeluaran Operasional Baru'}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={saving}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition"
-            aria-label="Tutup"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="p-5 space-y-4">
-          {apiError && (
-            <div className="px-3.5 py-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0" />
-              <span>{apiError}</span>
-            </div>
-          )}
-
-          {/* Dropdown Kategori */}
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-              Kategori Biaya <span className="text-rose-600">*</span>
-            </label>
-            <select
-              value={form.category}
-              onChange={(e) => {
-                setForm((p) => ({ ...p, category: e.target.value }));
-                setErrors((p) => ({ ...p, category: undefined }));
-              }}
-              className={inputCls(errors.category)}
-            >
-              <option value="">— Pilih kategori pengeluaran —</option>
-              {EXPENSE_CATEGORIES.map((c) => (
-                <option key={c.key} value={c.key}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-            {errors.category && (
-              <div className="text-xs text-red-600 font-medium mt-1">
-                {errors.category}
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {/* Input Nominal dengan Prefix Rp & Pemisah Ribuan */}
-            <div>
-              <label className="block text-xs font-semibold tracking-wider text-slate-600 mb-1.5">
-                NOMINAL BIAYA (Rp) <span className="text-rose-600">*</span>
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 pointer-events-none">
-                  Rp
-                </span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={formatThousandDigits(form.amount)}
-                  onChange={(e) => {
-                    const digits = parseDigits(e.target.value);
-                    setForm((p) => ({ ...p, amount: digits }));
-                    setErrors((p) => ({ ...p, amount: undefined }));
-                  }}
-                  placeholder="0"
-                  className={`${inputCls(errors.amount)} pl-9 font-sans tabular-nums font-semibold placeholder:text-slate-400 placeholder:font-normal`}
-                />
-              </div>
-              {errors.amount && (
-                <div className="text-xs text-red-600 font-medium mt-1">
-                  {errors.amount}
-                </div>
-              )}
-            </div>
-
-            {/* Input Tanggal Pengeluaran */}
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-                Tanggal Pengeluaran <span className="text-rose-600">*</span>
-              </label>
-              <input
-                type="date"
-                value={form.expense_date}
-                onChange={(e) => {
-                  setForm((p) => ({ ...p, expense_date: e.target.value }));
-                  setErrors((p) => ({ ...p, expense_date: undefined }));
-                }}
-                className={`${inputCls(errors.expense_date)} font-sans tabular-nums`}
-              />
-              {errors.expense_date && (
-                <div className="text-xs text-red-600 font-medium mt-1">
-                  {errors.expense_date}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Textarea Rincian / Keterangan Nota */}
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-              Rincian / Keterangan Nota
-            </label>
-            <textarea
-              rows={3}
-              value={form.notes}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, notes: e.target.value }))
-              }
-              placeholder="Contoh: Beli 5 strip timah balancing dan 1 tube lem tambal ban tubeless..."
-              className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition resize-y"
-            />
-          </div>
-        </div>
-
-        <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-slate-200 bg-slate-50">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={saving}
-            className="h-10 px-4 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold transition cursor-pointer"
-          >
-            Batal
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="h-10 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-semibold shadow-xs transition inline-flex items-center gap-2 disabled:opacity-60 cursor-pointer"
-          >
-            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-            <span>
-              {saving
-                ? 'Menyimpan...'
-                : isEdit
-                  ? 'Simpan Perubahan'
-                  : 'Simpan Pengeluaran'}
-            </span>
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-}
-
-function ExpenseDeleteModal({ expense, onClose, onDeleted, onError }) {
-  const [busy, setBusy] = useState(false);
-
-  const handleDelete = async () => {
-    setBusy(true);
-    try {
-      const res = await deleteExpense(expense.id);
-      onDeleted(
-        res.data?.message || 'Data biaya operasional berhasil dihapus.'
-      );
-    } catch (err) {
-      onError(
-        err.response?.data?.message || 'Gagal menghapus data biaya operasional.'
-      );
-    }
-  };
-
-  return (
-    <div
-      className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
-      onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}
-    >
-      <div className="w-full max-w-md bg-white border border-slate-200/80 rounded-xl shadow-xl overflow-hidden font-sans text-left">
-        <div className="px-5 py-3.5 border-b border-slate-200 bg-slate-50">
-          <h2 className="text-sm font-bold text-slate-900">
-            Hapus Biaya Operasional?
-          </h2>
-        </div>
-
-        <div className="p-5 space-y-3 text-xs text-slate-600">
-          <p className="leading-relaxed">
-            Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat
-            dibatalkan.
-          </p>
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">Kode Dokumen:</span>
-              <span className="font-mono font-bold text-slate-900">
-                {expense.expense_code}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">Kategori:</span>
-              <CategoryBadge category={expense.category} />
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">Nominal:</span>
-              <span className="font-sans tabular-nums font-bold text-slate-900">
-                {rupiah(expense.amount)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-slate-200 bg-slate-50">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={busy}
-            className="h-10 px-4 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold transition cursor-pointer"
-          >
-            Batal
-          </button>
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={busy}
-            className="h-10 px-4 rounded-lg bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-semibold shadow-xs transition inline-flex items-center gap-2 disabled:opacity-60 cursor-pointer"
-          >
-            {busy && <Loader2 className="w-4 h-4 animate-spin" />}
-            <span>{busy ? 'Menghapus...' : 'Ya, Hapus'}</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+import useToast from '../../hooks/useToast';
+import { formatReadableDate, rupiah } from '../../utils/formatters';
+import ExpenseDeleteModal from './ExpenseDeleteModal';
+import ExpenseFormModal from './ExpenseFormModal';
+import ExpenseStatsBar, { CategoryBadge } from './ExpenseStatsBar';
 
 export default function ExpensesPage() {
   const { user } = useAuth();
@@ -428,7 +39,7 @@ export default function ExpensesPage() {
 
   const [formModal, setFormModal] = useState(null); // null | { expense? }
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [toast, setToast] = useState(null);
+  const { toast, showToast } = useToast();
 
   const loadExpenses = useCallback(async () => {
     setLoading(true);
@@ -465,12 +76,6 @@ export default function ExpensesPage() {
     }
   }, [user, loadExpenses]);
 
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 3500);
-    return () => clearTimeout(t);
-  }, [toast]);
-
   const topCategoryAmount = useMemo(() => {
     if (!summary.top_category) return 0;
     return expenses
@@ -489,10 +94,6 @@ export default function ExpensesPage() {
     setStartDate('');
     setEndDate('');
   };
-
-  const topCategoryLabel = summary.top_category
-    ? CATEGORY_MAP[summary.top_category]?.label || summary.top_category
-    : 'Belum ada data';
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans p-4 sm:p-6 text-slate-900 space-y-5">
@@ -529,66 +130,10 @@ export default function ExpensesPage() {
       </div>
 
       {/* KPI Stat Bar (Grid 3 Kolom) */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
-        {/* Kartu 1: Total Pengeluaran */}
-        <div className="bg-white border border-slate-200/80 rounded-xl shadow-sm p-4 flex items-start justify-between gap-3">
-          <div>
-            <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-              Total Pengeluaran (Periode Terfilter)
-            </span>
-            <div className="font-sans tabular-nums text-xl font-bold text-slate-900 mt-1">
-              {rupiah(summary.total_amount)}
-            </div>
-            <span className="block text-[11px] text-slate-400 mt-0.5">
-              Akumulasi beban operasional
-            </span>
-          </div>
-          <div className="w-9 h-9 rounded-lg bg-blue-50 border border-blue-200/80 text-blue-600 flex items-center justify-center shrink-0">
-            <Wallet className="w-4 h-4" />
-          </div>
-        </div>
-
-        {/* Kartu 2: Jumlah Catatan Beban */}
-        <div className="bg-white border border-slate-200/80 rounded-xl shadow-sm p-4 flex items-start justify-between gap-3">
-          <div>
-            <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-              Jumlah Catatan Beban
-            </span>
-            <div className="font-sans tabular-nums text-xl font-bold text-slate-900 mt-1">
-              {summary.total_records}{' '}
-              <span className="text-xs font-semibold text-slate-500">
-                transaksi
-              </span>
-            </div>
-            <span className="block text-[11px] text-slate-400 mt-0.5">
-              Total dokumen pengeluaran tercatat
-            </span>
-          </div>
-          <div className="w-9 h-9 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center shrink-0">
-            <FileText className="w-4 h-4" />
-          </div>
-        </div>
-
-        {/* Kartu 3: Kategori Pengeluaran Terbesar */}
-        <div className="bg-white border border-slate-200/80 rounded-xl shadow-sm p-4 flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-              Kategori Pengeluaran Terbesar
-            </span>
-            <div className="text-base font-bold leading-snug line-clamp-2 text-slate-900 mt-1">
-              {topCategoryLabel}
-            </div>
-            <span className="block text-[11px] font-sans tabular-nums text-slate-500 mt-0.5">
-              {summary.top_category
-                ? `Total ${rupiah(topCategoryAmount)}`
-                : 'Pos beban dengan nominal tertinggi'}
-            </span>
-          </div>
-          <div className="w-9 h-9 rounded-lg bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0">
-            <TrendingUp className="w-4 h-4" />
-          </div>
-        </div>
-      </div>
+      <ExpenseStatsBar
+        summary={summary}
+        topCategoryAmount={topCategoryAmount}
+      />
 
       {/* Baris Filter & Kontrol Satu Baris */}
       <div className="bg-white border border-slate-200/80 rounded-xl shadow-sm p-3.5 text-left">
@@ -704,7 +249,7 @@ export default function ExpensesPage() {
                         {row.expense_code}
                       </div>
                       <div className="font-sans tabular-nums text-[11px] text-slate-500 mt-0.5">
-                        {formatExpenseDate(row.expense_date)}
+                        {formatReadableDate(row.expense_date)}
                       </div>
                     </td>
                     <td className="py-2.5 px-4 whitespace-nowrap">
@@ -783,7 +328,7 @@ export default function ExpensesPage() {
           onClose={() => setFormModal(null)}
           onSaved={(msg) => {
             setFormModal(null);
-            setToast({ type: 'success', message: msg });
+            showToast(msg, 'success');
             loadExpenses();
           }}
         />
@@ -796,25 +341,17 @@ export default function ExpensesPage() {
           onClose={() => setDeleteTarget(null)}
           onDeleted={(msg) => {
             setDeleteTarget(null);
-            setToast({ type: 'success', message: msg });
+            showToast(msg, 'success');
             loadExpenses();
           }}
           onError={(msg) => {
             setDeleteTarget(null);
-            setToast({ type: 'error', message: msg });
+            showToast(msg, 'error');
           }}
         />
       )}
 
-      {toast && (
-        <div
-          className={`fixed right-5 bottom-5 z-50 px-4 py-2.5 rounded-lg text-xs font-semibold text-white shadow-lg ${
-            toast.type === 'error' ? 'bg-rose-600' : 'bg-emerald-600'
-          }`}
-        >
-          {toast.message}
-        </div>
-      )}
+      <ToastNotification toast={toast} />
     </div>
   );
 }

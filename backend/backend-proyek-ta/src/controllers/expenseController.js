@@ -1,7 +1,9 @@
 const db = require('../config/database');
 const { logAudit } = require('../utils/auditLogger');
-const { fail } = require('../utils/httpHelper');
-const { isPositiveInt } = require('../utils/validators');
+const { generateExpenseCode } = require('../utils/codeGenerator');
+const { formatIdr } = require('../utils/formatters');
+const { fail, getActorId, handleControllerError } = require('../utils/httpHelper');
+const { isPositiveInt, isValidAmount, isValidDateStr } = require('../utils/validators');
 
 const VALID_CATEGORIES = [
   'listrik_air_internet',
@@ -14,87 +16,10 @@ const VALID_CATEGORIES = [
 const VALIDATION_ERROR_MSG =
   'Nominal biaya harus lebih dari Rp 0 dan kategori biaya operasional wajib dipilih.';
 
-const formatIdr = (val) =>
-  Math.round(Number(val || 0)).toLocaleString('id-ID');
-
-const isValidAmount = (val) =>
-  val !== '' &&
-  val !== null &&
-  val !== undefined &&
-  typeof val !== 'boolean' &&
-  Number.isFinite(Number(val)) &&
-  Number(val) > 0;
-
-const isValidDate = (val) =>
-  typeof val === 'string' &&
-  /^\d{4}-\d{2}-\d{2}$/.test(val.trim()) &&
-  !Number.isNaN(Date.parse(val.trim()));
-
-// Pastikan tabel operational_expenses tersedia di database
-(async () => {
-  try {
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS operational_expenses (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        expense_code VARCHAR(50) NOT NULL UNIQUE,
-        category ENUM(
-          'listrik_air_internet',
-          'gaji_karyawan',
-          'sewa_tempat',
-          'perlengkapan_bengkel',
-          'konsumsi_toko',
-          'perawatan_alat',
-          'lain_lain'
-        ) NOT NULL,
-        amount DECIMAL(12, 2) NOT NULL,
-        expense_date DATE NOT NULL,
-        notes TEXT NULL,
-        created_by INT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        CONSTRAINT fk_expense_user FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE RESTRICT
-      ) ENGINE=InnoDB;
-    `);
-  } catch (err) {
-    console.warn('Info pemeriksaan tabel operational_expenses:', err.message);
-  }
-})();
-
-// Generate kode unik: EXP-YYMMDD-XXXX (contoh: EXP-261123-0001)
-const generateExpenseCode = async (expenseDate) => {
-  const cleanDate = String(expenseDate || '').trim().replace(/-/g, '');
-  const yymmdd =
-    cleanDate.length === 8
-      ? cleanDate.slice(2)
-      : new Date().toISOString().slice(2, 10).replace(/-/g, '');
-  const prefix = `EXP-${yymmdd}-`;
-
-  const [rows] = await db.execute(
-    'SELECT expense_code FROM operational_expenses WHERE expense_code LIKE ? ORDER BY id DESC LIMIT 1',
-    [`${prefix}%`]
-  );
-
-  let nextSeq = 1;
-  if (rows.length > 0) {
-    const parts = String(rows[0].expense_code).split('-');
-    const lastSeq = parseInt(parts[2], 10);
-    if (!Number.isNaN(lastSeq)) {
-      nextSeq = lastSeq + 1;
-    }
-  }
-
-  const suffix =
-    nextSeq <= 9999
-      ? String(nextSeq).padStart(4, '0')
-      : String(Math.floor(1000 + Math.random() * 9000));
-
-  return `${prefix}${suffix}`;
-};
-
 // POST /api/expenses — Pencatatan Biaya Operasional Baru (Khusus Owner)
 const createExpense = async (req, res) => {
   try {
-    const userId = req.user?.id || req.user?.userId;
+    const userId = getActorId(req);
     if (!userId) return fail(res, 401, 'Identitas pengguna tidak terdeteksi.');
 
     const body = req.body || {};
@@ -103,7 +28,7 @@ const createExpense = async (req, res) => {
     if (
       !VALID_CATEGORIES.includes(category) ||
       !isValidAmount(amount) ||
-      !isValidDate(expense_date)
+      !isValidDateStr(expense_date)
     ) {
       return fail(res, 400, VALIDATION_ERROR_MSG);
     }
@@ -173,8 +98,7 @@ const createExpense = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Kesalahan createExpense:', error);
-    return fail(res, 500, 'Terjadi kesalahan internal server');
+    return handleControllerError(res, error, 'createExpense');
   }
 };
 
@@ -196,7 +120,7 @@ const getExpenses = async (req, res) => {
 
     if (start_date !== undefined && String(start_date).trim() !== '') {
       const cleanStart = String(start_date).trim();
-      if (!isValidDate(cleanStart)) {
+      if (!isValidDateStr(cleanStart)) {
         return fail(res, 400, 'Format start_date harus YYYY-MM-DD.');
       }
       where.push('oe.expense_date >= ?');
@@ -205,7 +129,7 @@ const getExpenses = async (req, res) => {
 
     if (end_date !== undefined && String(end_date).trim() !== '') {
       const cleanEnd = String(end_date).trim();
-      if (!isValidDate(cleanEnd)) {
+      if (!isValidDateStr(cleanEnd)) {
         return fail(res, 400, 'Format end_date harus YYYY-MM-DD.');
       }
       where.push('oe.expense_date <= ?');
@@ -274,15 +198,14 @@ const getExpenses = async (req, res) => {
       data: formattedRows,
     });
   } catch (error) {
-    console.error('Kesalahan getExpenses:', error);
-    return fail(res, 500, 'Terjadi kesalahan internal server');
+    return handleControllerError(res, error, 'getExpenses');
   }
 };
 
 // PUT /api/expenses/:id — Pembaruan Data Biaya Operasional (Khusus Owner)
 const updateExpense = async (req, res) => {
   try {
-    const userId = req.user?.id || req.user?.userId;
+    const userId = getActorId(req);
     if (!userId) return fail(res, 401, 'Identitas pengguna tidak terdeteksi.');
 
     const { id } = req.params;
@@ -304,7 +227,7 @@ const updateExpense = async (req, res) => {
     if (
       !VALID_CATEGORIES.includes(category) ||
       !isValidAmount(amount) ||
-      !isValidDate(expense_date)
+      !isValidDateStr(expense_date)
     ) {
       return fail(res, 400, VALIDATION_ERROR_MSG);
     }
@@ -340,15 +263,14 @@ const updateExpense = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Kesalahan updateExpense:', error);
-    return fail(res, 500, 'Terjadi kesalahan internal server');
+    return handleControllerError(res, error, 'updateExpense');
   }
 };
 
 // DELETE /api/expenses/:id — Penghapusan Data Biaya Operasional (Khusus Owner)
 const deleteExpense = async (req, res) => {
   try {
-    const userId = req.user?.id || req.user?.userId;
+    const userId = getActorId(req);
     if (!userId) return fail(res, 401, 'Identitas pengguna tidak terdeteksi.');
 
     const { id } = req.params;
@@ -382,8 +304,7 @@ const deleteExpense = async (req, res) => {
       message: 'Data biaya operasional berhasil dihapus.',
     });
   } catch (error) {
-    console.error('Kesalahan deleteExpense:', error);
-    return fail(res, 500, 'Terjadi kesalahan internal server');
+    return handleControllerError(res, error, 'deleteExpense');
   }
 };
 
