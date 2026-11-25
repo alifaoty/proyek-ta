@@ -5,12 +5,12 @@ const roleMiddleware = require('../middlewares/roleMiddleware');
 
 const router = express.Router();
 
-// Seluruh rute wajib login dan hanya untuk peran admin & owner
-router.use(authMiddleware, roleMiddleware(['admin', 'owner']));
+// Seluruh rute inventori wajib melewati autentikasi JWT
+router.use(authMiddleware);
 
 // Path relatif: prefix /api/inventory dipasang di server.js
-router.post('/inbound', inventoryController.createInbound);
-router.post('/outbound', inventoryController.createOutbound);
-router.get('/mutations', inventoryController.getMutations);
+router.post('/inbound', roleMiddleware(['admin', 'owner']), inventoryController.createInbound);
+router.post('/outbound', roleMiddleware(['admin', 'owner']), inventoryController.createOutbound);
+router.get('/mutations', roleMiddleware(['owner']), inventoryController.getMutations);
 
 module.exports = router;
