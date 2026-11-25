@@ -333,12 +333,20 @@ const rejectOpname = async (req, res) => {
   }
 };
 
-// GET /api/stock-opnames — Daftar Riwayat Pengajuan Stock Opname (Role: Admin & Owner)
+// GET /api/stock-opnames — Daftar Riwayat Pengajuan Stok Opname (Role: Admin & Owner)
 const getOpnames = async (req, res) => {
   try {
     const { status, product_id } = req.query;
+    const actorId = getActorId(req);
+    const actorRole = req.user?.role;
     const where = [];
     const params = [];
+
+    // Pengendalian internal: Admin hanya dapat melihat riwayat pengajuan stok opname miliknya sendiri
+    if (actorRole === 'admin') {
+      where.push('so.checked_by = ?');
+      params.push(Number(actorId));
+    }
 
     if (status !== undefined && status !== '') {
       if (!VALID_STATUSES.includes(status)) {

@@ -8,6 +8,7 @@ import { getProducts } from '../../api/productApi';
 import { createOutbound, getMutations } from '../../api/inventoryApi';
 import ToastNotification from '../../components/common/ToastNotification';
 import { OUTBOUND_REASONS as REASONS } from '../../constants/productConstants';
+import useAuth from '../../hooks/useAuth';
 import useToast from '../../hooks/useToast';
 import { inputCls } from '../../utils/formatters';
 import { validateOutboundForm } from '../../utils/inventoryValidator';
@@ -16,6 +17,9 @@ import MutationHistoryTable from './MutationHistoryTable';
 const EMPTY = { product_id: '', quantity: '', reason: '', notes: '' };
 
 export default function OutboundPage() {
+  const { user } = useAuth();
+  const isOwner = user?.role === 'owner';
+
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState(EMPTY);
   const [errors, setErrors] = useState({});
@@ -24,9 +28,9 @@ export default function OutboundPage() {
   const [saving, setSaving] = useState(false);
   const { toast, showToast } = useToast();
 
-  // State Tabel Riwayat Log Mutasi Persediaan
+  // State Tabel Riwayat Log Mutasi Persediaan (Khusus Owner)
   const [mutations, setMutations] = useState([]);
-  const [loadingMutations, setLoadingMutations] = useState(true);
+  const [loadingMutations, setLoadingMutations] = useState(isOwner);
   const [typeFilter, setTypeFilter] = useState('');
   const [productFilter, setProductFilter] = useState('');
 
@@ -37,6 +41,7 @@ export default function OutboundPage() {
   }, []);
 
   const loadMutations = useCallback(async () => {
+    if (!isOwner) return;
     await Promise.resolve();
     try {
       const params = {};
@@ -49,18 +54,19 @@ export default function OutboundPage() {
     } finally {
       setLoadingMutations(false);
     }
-  }, [typeFilter, productFilter]);
+  }, [isOwner, typeFilter, productFilter]);
 
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
 
   useEffect(() => {
+    if (!isOwner) return;
     const timer = setTimeout(() => {
       loadMutations();
     }, 0);
     return () => clearTimeout(timer);
-  }, [loadMutations]);
+  }, [isOwner, loadMutations]);
 
   const product = useMemo(
     () => products.find((p) => String(p.id) === form.product_id),
@@ -92,8 +98,10 @@ export default function OutboundPage() {
       );
       setForm(EMPTY);
       loadProducts();
-      setLoadingMutations(true);
-      loadMutations();
+      if (isOwner) {
+        setLoadingMutations(true);
+        loadMutations();
+      }
     } catch (err) {
       setApiError(
         err.response?.data?.message || 'Gagal menyimpan mutasi keluar.'
@@ -113,16 +121,19 @@ export default function OutboundPage() {
             <span>Mutasi Persediaan</span>
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Catat pengeluaran barang di luar kasir serta pantau seluruh riwayat
-            mutasi stok (masuk, penjualan, keluar non-penjualan, dan opname).
+            {isOwner
+              ? 'Catat pengeluaran barang di luar kasir serta pantau seluruh riwayat mutasi stok (masuk, penjualan, keluar non-penjualan, dan opname).'
+              : 'Catat pengeluaran barang non-penjualan di luar kasir (retur rusak, pemakaian internal bengkel, peminjaman, atau kehilangan).'}
           </p>
         </div>
         <button
           type="button"
           onClick={() => {
             loadProducts();
-            setLoadingMutations(true);
-            loadMutations();
+            if (isOwner) {
+              setLoadingMutations(true);
+              loadMutations();
+            }
           }}
           className="h-9 px-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold inline-flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
         >
@@ -286,22 +297,24 @@ export default function OutboundPage() {
         </div>
       </form>
 
-      {/* BAGIAN BAWAH: Tabel Riwayat Log Mutasi Persediaan */}
-      <MutationHistoryTable
-        products={products}
-        mutations={mutations}
-        loadingMutations={loadingMutations}
-        productFilter={productFilter}
-        typeFilter={typeFilter}
-        onProductFilterChange={(val) => {
-          setLoadingMutations(true);
-          setProductFilter(val);
-        }}
-        onTypeFilterChange={(val) => {
-          setLoadingMutations(true);
-          setTypeFilter(val);
-        }}
-      />
+      {/* BAGIAN BAWAH: Tabel Riwayat Log Mutasi Persediaan (Khusus Owner) */}
+      {isOwner && (
+        <MutationHistoryTable
+          products={products}
+          mutations={mutations}
+          loadingMutations={loadingMutations}
+          productFilter={productFilter}
+          typeFilter={typeFilter}
+          onProductFilterChange={(val) => {
+            setLoadingMutations(true);
+            setProductFilter(val);
+          }}
+          onTypeFilterChange={(val) => {
+            setLoadingMutations(true);
+            setTypeFilter(val);
+          }}
+        />
+      )}
 
       <ToastNotification toast={toast} />
     </div>
