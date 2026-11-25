@@ -13,6 +13,7 @@ const transactionRoutes = require('./routes/transactionRoutes');
 const stockOpnameRoutes = require('./routes/stockOpnameRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const app = express();
 app.use(cors());
@@ -57,6 +58,9 @@ app.use('/api/expenses', expenseRoutes);
 
 // Registrasi rute modul laporan finansial, audit trail & ekspor data (Khusus Owner)
 app.use('/api/reports', reportRoutes);
+
+// Registrasi rute modul dashboard eksekutif Owner (Khusus Owner)
+app.use('/api/dashboard', dashboardRoutes);
 
 const PORT = process.env.PORT || 5000;
 
